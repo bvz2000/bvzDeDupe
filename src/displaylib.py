@@ -120,23 +120,25 @@ def format_string(msg):
     output = output.replace("}}", "}")
 
     output = output.format(
-        COLOR_BLACK=BLACK,
-        COLOR_RED=RED,
-        COLOR_GREEN=GREEN,
-        COLOR_YELLOW=YELLOW,
-        COLOR_BLUE=BLUE,
-        COLOR_MAGENTA=MAGENTA,
-        COLOR_CYAN=CYAN,
-        COLOR_WHITE=WHITE,
-        COLOR_BRIGHT_RED=BRIGHT_RED,
-        COLOR_BRIGHT_GREEN=BRIGHT_GREEN,
-        COLOR_BRIGHT_YELLOW=BRIGHT_YELLOW,
-        COLOR_BRIGHT_BLUE=BRIGHT_BLUE,
-        COLOR_BRIGHT_MAGENTA=BRIGHT_MAGENTA,
-        COLOR_BRIGHT_CYAN=BRIGHT_CYAN,
-        COLOR_BRIGHT_WHITE=BRIGHT_WHITE,
+        BLACK=BLACK,
+        RED=RED,
+        GREEN=GREEN,
+        YELLOW=YELLOW,
+        BLUE=BLUE,
+        MAGENTA=MAGENTA,
+        CYAN=CYAN,
+        WHITE=WHITE,
+        BRIGHT_RED=BRIGHT_RED,
+        BRIGHT_GREEN=BRIGHT_GREEN,
+        BRIGHT_YELLOW=BRIGHT_YELLOW,
+        BRIGHT_BLUE=BRIGHT_BLUE,
+        BRIGHT_MAGENTA=BRIGHT_MAGENTA,
+        BRIGHT_CYAN=BRIGHT_CYAN,
+        BRIGHT_WHITE=BRIGHT_WHITE,
         COLOR_NONE=ENDC,
     )
+
+    output += ENDC
 
     return output
 
@@ -149,7 +151,9 @@ def display_message(*msgs):
     :return: Nothing.
     """
 
-    print(" ".join([str(item) for item in msgs]))
+    msg = " ".join([str(item) for item in msgs])
+    msg = format_string(msg)
+    print(msg)
 
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -167,3 +171,14 @@ def display_refreshable_message(*msgs):
     sys.stdout.flush()
     sys.stdout.write("\b" * (len(message)))
 
+
+# ----------------------------------------------------------------------------------------------------------------------
+def finish_refreshable_message():
+    """
+    Called when the refreshable message is no longer needed (prevents the next printed statement from overwriting the
+    last version of the refreshed message.
+
+    :return: Nothing.
+    """
+
+    print()
