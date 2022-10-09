@@ -1,5 +1,6 @@
 #! /usr/bin/env python3
 
+import displayLib
 from scan import Scan
 
 """
@@ -12,7 +13,7 @@ path = sys.argv[1]
 
 scan_obj = Scan(path)
 for counter in scan_obj.scan(report_frequency=10):
-    print(counter)
+    displayLib.display_refreshable_message(f"Files scanned so far: {counter}")
 
 print(f"Number of files scanned: {scan_obj.checked_count}")
 print(f"Number of error files: {scan_obj.error_count}")
