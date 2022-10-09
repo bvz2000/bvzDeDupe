@@ -87,7 +87,7 @@ class Scan(object):
             self.bysize[afile_obj.size].add(afile_obj)
         except KeyError:
             bysize_obj = BySize(afile_obj.size)
-            bysize_obj.add(afile_obj)
+            bysize_obj.afile_objs.append(afile_obj)
             self.bysize[afile_obj.size] = bysize_obj
 
     # ------------------------------------------------------------------------------------------------------------------
@@ -105,7 +105,7 @@ class Scan(object):
             self.byname[afile_obj.name].add(afile_obj)
         except KeyError:
             byname_obj = ByName(afile_obj.name)
-            byname_obj.add(afile_obj)
+            byname_obj.afile_objs.append(afile_obj)
             self.byname[afile_obj.name] = byname_obj
 
     # ------------------------------------------------------------------------------------------------------------------
@@ -123,7 +123,7 @@ class Scan(object):
             self.byparent[afile_obj.parent_name].add(afile_obj)
         except KeyError:
             byparent_obj = ByParent(afile_obj.parent_name)
-            byparent_obj.add(afile_obj)
+            byparent_obj.afile_objs.append(afile_obj)
             self.byparent[afile_obj.parent_name] = byparent_obj
 
     # ------------------------------------------------------------------------------------------------------------------
@@ -141,7 +141,7 @@ class Scan(object):
             self.bytype[afile_obj.file_type].add(afile_obj)
         except KeyError:
             bytype_obj = ByType(afile_obj.file_type)
-            bytype_obj.add(afile_obj)
+            bytype_obj.afile_objs.append(afile_obj)
             self.bytype[afile_obj.parent_name] = bytype_obj
 
     # ------------------------------------------------------------------------------------------------------------------
