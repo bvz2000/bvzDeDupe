@@ -17,18 +17,14 @@ class Scan(object):
 
     # ------------------------------------------------------------------------------------------------------------------
     def __init__(self,
-                 scan_dir=None):
+                 scan_dir):
         """
-        :param scan_dir: The directory to scan. If None, the dir will be set to "" and will have to be set directly
-               later. Defaults to None.
+        :param scan_dir: The directory to scan.
         """
 
-        assert scan_dir is None or type(scan_dir) is str
+        assert type(scan_dir) is str
 
-        if scan_dir is None:
-            self.scan_dir = ""
-        else:
-            self.scan_dir = scan_dir
+        self.scan_dir = scan_dir
 
         self.bysize = dict()
         self.byname = dict()
@@ -176,7 +172,6 @@ class Scan(object):
         :return: Nothing.
         """
 
-        print("SCANNING " + self.scan_dir)
         if self.scan_dir is None:
             raise IOError("No directory has been set to scan.")
 
