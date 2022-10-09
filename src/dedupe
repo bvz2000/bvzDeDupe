@@ -1,0 +1,24 @@
+#! /usr/bin/env python3
+
+from scan import Scan
+
+"""
+NOTE: This code is super super temp. Just to test out the modules. Once those are working, this code will be refactored
+into a proper front end.
+"""
+import sys
+
+path = sys.argv[1]
+
+scan_obj = Scan(path)
+for counter in scan_obj.scan(report_frequency=10):
+    print(counter)
+
+print(f"Number of files scanned: {scan_obj.checked_count}")
+print(f"Number of error files: {scan_obj.error_count}")
+print(f"Error files: {scan_obj.error_files}")
+print(f"Number of zero length files skipped: {scan_obj.skipped_zero_len}")
+print(f"Number of hidden files skipped: {scan_obj.skipped_hidden}")
+print(f"Number of files skipped because they were outside of the inclusion regex's: {scan_obj.skipped_include}")
+print(f"Number of files skipped because they matched the exlusion regex's: {scan_obj.skipped_exclude}")
+print(f"Number of files accumulated: {scan_obj.count}")
