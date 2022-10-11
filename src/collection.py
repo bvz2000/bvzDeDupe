@@ -1,4 +1,10 @@
 #! /usr/bin/env python3
+"""
+A class to store related byattribute objects.
+
+For example, store all the different by_size attribute objects, keyed on size (each of which stores all of the AFile
+indices that have the same size).
+"""
 
 from dataclasses import dataclass, field
 

@@ -9,7 +9,7 @@ from collection import Collection
 
 class Scan(object):
     """
-    A class to scan a single directory.
+    A class to scan and store the attributes of every file in a single directory.
     """
 
     # ------------------------------------------------------------------------------------------------------------------
