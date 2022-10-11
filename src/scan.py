@@ -4,10 +4,7 @@ import os.path
 import re
 
 from afile import AFile
-from bysize import BySize
-from byname import ByName
-from byparent import ByParent
-from bytype import ByType
+from collection import Collection
 
 
 class Scan(object):
@@ -26,13 +23,18 @@ class Scan(object):
 
         self.scan_dir = scan_dir
 
-        self.bysize = dict()
-        self.byname = dict()
-        self.byparent = dict()
-        self.bytype = dict()
+        self.afile_objs = list()
+
+        self.by_size = Collection()
+        self.by_name = Collection()
+        self.by_parent = Collection()
+        self.by_type = Collection()
+
         self.error_files = set()
-        self.count = 0
+
+        self.initial_count = 0
         self.checked_count = 0
+        self.skipped_links = 0
         self.error_count = 0
         self.skipped_zero_len = 0
         self.skipped_hidden = 0
@@ -67,78 +69,6 @@ class Scan(object):
                           hidden=os.path.split(file_path)[1][0] == ".")
 
         return afile_obj
-
-    # ------------------------------------------------------------------------------------------------------------------
-    def add_by_size(self,
-                    afile_obj):
-        """
-        Adds the afile_obj to the bysize collection.
-
-        :param afile_obj: The afile object to add based on its size.
-
-        :return: Nothing.
-        """
-
-        try:
-            self.bysize[afile_obj.size].afile_objs.append(afile_obj)
-        except KeyError:
-            bysize_obj = BySize(afile_obj.size)
-            bysize_obj.afile_objs.append(afile_obj)
-            self.bysize[afile_obj.size] = bysize_obj
-
-    # ------------------------------------------------------------------------------------------------------------------
-    def add_by_name(self,
-                    afile_obj):
-        """
-        Adds the afile_obj to the byname collection.
-
-        :param afile_obj: The afile object to add based on its name.
-
-        :return: Nothing.
-        """
-
-        try:
-            self.byname[afile_obj.name].afile_objs.append(afile_obj)
-        except KeyError:
-            byname_obj = ByName(afile_obj.name)
-            byname_obj.afile_objs.append(afile_obj)
-            self.byname[afile_obj.name] = byname_obj
-
-    # ------------------------------------------------------------------------------------------------------------------
-    def add_by_parent(self,
-                      afile_obj):
-        """
-        Adds the afile_obj to the byparent collection.
-
-        :param afile_obj: The afile object to add based on its parent name.
-
-        :return: Nothing.
-        """
-
-        try:
-            self.byparent[afile_obj.parent_name].afile_objs.append(afile_obj)
-        except KeyError:
-            byparent_obj = ByParent(afile_obj.parent_name)
-            byparent_obj.afile_objs.append(afile_obj)
-            self.byparent[afile_obj.parent_name] = byparent_obj
-
-    # ------------------------------------------------------------------------------------------------------------------
-    def add_by_type(self,
-                    afile_obj):
-        """
-        Adds the afile_obj to the bytype collection.
-
-        :param afile_obj: The afile object to add based on its type.
-
-        :return: Nothing.
-        """
-
-        try:
-            self.bytype[afile_obj.file_type].afile_objs.append(afile_obj)
-        except KeyError:
-            bytype_obj = ByType(afile_obj.file_type)
-            bytype_obj.afile_objs.append(afile_obj)
-            self.bytype[afile_obj.parent_name] = bytype_obj
 
     # ------------------------------------------------------------------------------------------------------------------
     def scan(self,
@@ -219,6 +149,11 @@ class Scan(object):
                         continue
 
                 file_path = os.path.join(root, file_name)
+
+                if os.path.islink(file_path):
+                    self.skipped_links += 1
+                    continue
+
                 try:
                     file_size = os.path.getsize(file_path)
                 except FileNotFoundError:
@@ -231,13 +166,95 @@ class Scan(object):
                         self.skipped_zero_len += 1
                         continue
 
-                self.count += 1
+                self.initial_count += 1
 
                 afile_obj = self.create_afile_obj(file_path)
-                self.add_by_size(afile_obj)
-                self.add_by_name(afile_obj)
-                self.add_by_parent(afile_obj)
-                self.add_by_type(afile_obj)
+                self.afile_objs.append(afile_obj)
+                afile_idx = len(self.afile_objs) - 1
+
+                self.by_size.store_index(afile_obj.size, afile_idx)
+                self.by_name.store_index(afile_obj.name, afile_idx)
+                self.by_parent.store_index(afile_obj.parent_name, afile_idx)
+                self.by_type.store_index(afile_obj.file_type, afile_idx)
 
                 if skip_sub_dir:
                     sub_folders[:] = []
+
+    # # ------------------------------------------------------------------------------------------------------------------
+    # def id_non_matching_size_afile_objs(self,
+    #                                     sizes):
+    #     """
+    #     Given a list of sizes, goes through the bysize afile objects and adds to a master list any of those objects that
+    #     have a size NOT in this list.
+    #
+    #     :param sizes: A list of sizes.
+    #
+    #     :return: Nothing.
+    #     """
+    #
+    #     keys = list(self.by_size.keys())
+    #     for key in keys:
+    #         if key not in sizes:
+    #             self.afile_objs_to_remove.extend(self.by_size[key].indices)
+    #
+    # # ------------------------------------------------------------------------------------------------------------------
+    # def id_non_matching_name_afile_objs(self,
+    #                                     names):
+    #     """
+    #     Given a list of names, goes through the byname afile objects and adds to a master list any of those objects that
+    #     have a name NOT in this list.
+    #
+    #     :param names: A list of names.
+    #
+    #     :return: Nothing.
+    #     """
+    #
+    #     keys = list(self.by_name.keys())
+    #     for key in keys:
+    #         if key not in names:
+    #             self.afile_objs_to_remove.extend(self.by_name[key].indices)
+    #
+    # # ------------------------------------------------------------------------------------------------------------------
+    # def remove_non_matching_parent_names(self,
+    #                                      names):
+    #     """
+    #     Given a list of parent names, remove any AFile objects from the byparent dictionary that are not in this list.
+    #
+    #     :param names: A list of parent names to keep.
+    #
+    #     :return: Nothing.
+    #     """
+    #
+    #     keys = list(self.by_parent.keys())
+    #     for key in keys:
+    #         if key not in names:
+    #             del self.by_parent[key]
+    #
+    # # ------------------------------------------------------------------------------------------------------------------
+    # def remove_non_matching_types(self,
+    #                               types):
+    #     """
+    #     Given a list of types, remove any AFile objects from the bytype dictionary that are not in this list.
+    #
+    #     :param types: A list of types to keep.
+    #
+    #     :return: Nothing.
+    #     """
+    #
+    #     keys = list(self.by_type.keys())
+    #     for key in keys:
+    #         if key not in types:
+    #             del self.by_type[key]
+    #
+    # # ------------------------------------------------------------------------------------------------------------------
+    # def reconcile(self):
+    #     """
+    #     After removing non-matching sizes, names, parent_names, and types the different collections may be out of sync.
+    #     Specifically, there may have been AFile object instances that were removed from one that should also now be
+    #     removed from all the others. This function takes care of that.
+    #
+    #     :return: Nothing.
+    #     """
+    #
+    #     # Wait a minute... do I really want to do this???
+    #     pass
