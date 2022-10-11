@@ -119,24 +119,27 @@ def format_string(msg):
     output = output.replace("{{", "{")
     output = output.replace("}}", "}")
 
-    output = output.format(
-        BLACK=BLACK,
-        RED=RED,
-        GREEN=GREEN,
-        YELLOW=YELLOW,
-        BLUE=BLUE,
-        MAGENTA=MAGENTA,
-        CYAN=CYAN,
-        WHITE=WHITE,
-        BRIGHT_RED=BRIGHT_RED,
-        BRIGHT_GREEN=BRIGHT_GREEN,
-        BRIGHT_YELLOW=BRIGHT_YELLOW,
-        BRIGHT_BLUE=BRIGHT_BLUE,
-        BRIGHT_MAGENTA=BRIGHT_MAGENTA,
-        BRIGHT_CYAN=BRIGHT_CYAN,
-        BRIGHT_WHITE=BRIGHT_WHITE,
-        COLOR_NONE=ENDC,
-    )
+    try:
+        output = output.format(
+            BLACK=BLACK,
+            RED=RED,
+            GREEN=GREEN,
+            YELLOW=YELLOW,
+            BLUE=BLUE,
+            MAGENTA=MAGENTA,
+            CYAN=CYAN,
+            WHITE=WHITE,
+            BRIGHT_RED=BRIGHT_RED,
+            BRIGHT_GREEN=BRIGHT_GREEN,
+            BRIGHT_YELLOW=BRIGHT_YELLOW,
+            BRIGHT_BLUE=BRIGHT_BLUE,
+            BRIGHT_MAGENTA=BRIGHT_MAGENTA,
+            BRIGHT_CYAN=BRIGHT_CYAN,
+            BRIGHT_WHITE=BRIGHT_WHITE,
+            COLOR_NONE=ENDC,
+        )
+    except KeyError:
+        pass
 
     output += ENDC
 
@@ -160,7 +163,10 @@ def display_message(*msgs):
 def display_refreshable_message(*msgs):
     """
     Given any number of args, converts those args to strings, concatenates them, and prints to stdOut. Then resets the
-    output to be back at the beginning f the line ready for the next string to overwrite the just printed string.
+    output to be back at the beginning f the line ready for the next string to overwrite the just printed string. NOTE:
+    THIS ONLY WORKS FOR STRINGS THAT STAY THE SAME LENGTH OR GROW IN LENGTH. If the string shrinks in length, part of
+    the previous message will be left behind. To counter this (if you have potentially shrinking strings), it may be
+    necessary to pad your strings with spaces at the end to a known length.
 
     :return: Nothing.
     """
