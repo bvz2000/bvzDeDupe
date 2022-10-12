@@ -4,7 +4,6 @@ import os.path
 import re
 
 from afile import AFile
-from collection import Collection
 
 
 class Scan(object):
@@ -23,12 +22,7 @@ class Scan(object):
 
         self.scan_dir = scan_dir
 
-        self.afile_objs = list()
-
-        self.by_size = Collection()
-        self.by_name = Collection()
-        self.by_parent = Collection()
-        self.by_type = Collection()
+        self.afile_objs = dict()
 
         self.error_files = set()
 
@@ -44,11 +38,13 @@ class Scan(object):
     # ------------------------------------------------------------------------------------------------------------------
     @staticmethod
     def create_afile_obj(file_path,
+                         rel_path,
                          file_size=None):
         """
         Given a file path, creates an AFile object.
 
         :param file_path: The path to the file on disk.
+        :param rel_path: The relative path to the file (relative to the scan directory)
         :param file_size: The size of the file. If None, then the size will be extracted from disk. Used in case the
                size has already been determined and, as such, may be passed in instead of having to calculate it a
                second time. Defaults to None.
@@ -63,6 +59,7 @@ class Scan(object):
         file_modification_date = os.stat(file_path).st_mtime
 
         afile_obj = AFile(path=file_path,
+                          rel_path=rel_path,
                           size=file_size,
                           creation_date=file_creation_date,
                           modification_date=file_modification_date,
@@ -72,6 +69,10 @@ class Scan(object):
 
     # ------------------------------------------------------------------------------------------------------------------
     def scan(self,
+             compare_on_name=False,
+             compare_on_parent_name=False,
+             compare_on_rel_path=False,
+             compare_on_cdate=False,
              skip_sub_dir=False,
              skip_hidden=False,
              skip_zero_len=True,
@@ -83,6 +84,14 @@ class Scan(object):
         """
         Triggers a scan of the directory.
 
+        :param compare_on_name: If True, then the name of the files will have to match in order for two files to be
+               considered identical.
+        :param compare_on_parent_name: If True, then the name of the files' parent directory will have to match in order
+               for two files to be considered identical.
+        :param compare_on_rel_path: If True, then the full relative path of the files will have to match in order for
+               two files to be considered identical.
+        :param compare_on_cdate: If True, then the creation date of the files will have to match in order for two files
+               to be considered identical.
         :param skip_sub_dir: If True, then no subdirectories will be included (only the top-level directory will be
                scanned. Defaults to False.
         :param skip_hidden: If True, then hidden files will be ignored in the scan. Defaults to False.
@@ -106,12 +115,10 @@ class Scan(object):
             raise IOError("No directory has been set to scan.")
 
         if not os.path.exists(self.scan_dir):
-            #raise IOError(f"The directory {self.scan_dir} does not exist")
-            raise IOError("The directory does not exist")
+            raise IOError(f"The directory {self.scan_dir} does not exist")
 
         if not os.path.isdir(self.scan_dir):
-            #raise IOError(f"The path {self.scan_dir} is not a directory")
-            raise IOError(f"The path is not a directory")
+            raise IOError(f"The path {self.scan_dir} is not a directory")
 
         for root, sub_folders, files in os.walk(self.scan_dir):
 
@@ -168,93 +175,53 @@ class Scan(object):
 
                 self.initial_count += 1
 
-                afile_obj = self.create_afile_obj(file_path)
-                self.afile_objs.append(afile_obj)
-                afile_idx = len(self.afile_objs) - 1
+                rel_path = os.path.relpath(file_path, self.scan_dir)
+                afile_obj = self.create_afile_obj(file_path, rel_path=rel_path)
 
-                self.by_size.store_index(afile_obj.size, afile_idx)
-                self.by_name.store_index(afile_obj.name, afile_idx)
-                self.by_parent.store_index(afile_obj.parent_name, afile_idx)
-                self.by_type.store_index(afile_obj.file_type, afile_idx)
+                if compare_on_name:
+                    name = afile_obj.name
+                else:
+                    name = None
+
+                if compare_on_parent_name:
+                    parent_name = afile_obj.parent_name
+                else:
+                    parent_name = None
+
+                if compare_on_cdate:
+                    cdate = afile_obj.creation_date
+                else:
+                    cdate = None
+
+                # TODO: Here is the conundrum. If I include the relative path each time, then only files with the same
+                #  relative path will match. But if I leave it out, then if more than one file has the same size, the
+                #  very last one that is scanned will clobber the others in the dictionary. Even if I do include the
+                #  relative path, if more than one file has the same size INSIDE of that path, then the same issue
+                #  occurs. The only way I know to solve this is to have the top-level dictionary only key on size, and
+                #  then have each item in that dictionary contain a dictionary keyed on all of the other categories. But
+                #  then I wind up with the same convoluted code that I had before... sigh. Ideally I would have just the
+                #  single dict with all of the key elements filled in (relative path, name, size, etc.) but when I
+                #  compare keys I would be able to do it only on certain elements of this... which may actually be
+                #  possible. I am just comparing entire keys, but what if I compared the key tuples element by element?
+                #  .
+                #  But in any event, the code below will fail to correctly identify duplicates because it only works on
+                #  duplicates in the same relative path, and will potentially fail to match duplicates if more than one
+                #  file in the relative path shares the same size. So it is BROKEN!!!!! and should NOT be trusted.
+                key = (rel_path, afile_obj.size, name, parent_name, cdate)
+                self.afile_objs[key] = afile_obj
 
                 if skip_sub_dir:
                     sub_folders[:] = []
 
-    # # ------------------------------------------------------------------------------------------------------------------
-    # def id_non_matching_size_afile_objs(self,
-    #                                     sizes):
-    #     """
-    #     Given a list of sizes, goes through the bysize afile objects and adds to a master list any of those objects that
-    #     have a size NOT in this list.
-    #
-    #     :param sizes: A list of sizes.
-    #
-    #     :return: Nothing.
-    #     """
-    #
-    #     keys = list(self.by_size.keys())
-    #     for key in keys:
-    #         if key not in sizes:
-    #             self.afile_objs_to_remove.extend(self.by_size[key].indices)
-    #
-    # # ------------------------------------------------------------------------------------------------------------------
-    # def id_non_matching_name_afile_objs(self,
-    #                                     names):
-    #     """
-    #     Given a list of names, goes through the byname afile objects and adds to a master list any of those objects that
-    #     have a name NOT in this list.
-    #
-    #     :param names: A list of names.
-    #
-    #     :return: Nothing.
-    #     """
-    #
-    #     keys = list(self.by_name.keys())
-    #     for key in keys:
-    #         if key not in names:
-    #             self.afile_objs_to_remove.extend(self.by_name[key].indices)
-    #
-    # # ------------------------------------------------------------------------------------------------------------------
-    # def remove_non_matching_parent_names(self,
-    #                                      names):
-    #     """
-    #     Given a list of parent names, remove any AFile objects from the byparent dictionary that are not in this list.
-    #
-    #     :param names: A list of parent names to keep.
-    #
-    #     :return: Nothing.
-    #     """
-    #
-    #     keys = list(self.by_parent.keys())
-    #     for key in keys:
-    #         if key not in names:
-    #             del self.by_parent[key]
-    #
-    # # ------------------------------------------------------------------------------------------------------------------
-    # def remove_non_matching_types(self,
-    #                               types):
-    #     """
-    #     Given a list of types, remove any AFile objects from the bytype dictionary that are not in this list.
-    #
-    #     :param types: A list of types to keep.
-    #
-    #     :return: Nothing.
-    #     """
-    #
-    #     keys = list(self.by_type.keys())
-    #     for key in keys:
-    #         if key not in types:
-    #             del self.by_type[key]
-    #
-    # # ------------------------------------------------------------------------------------------------------------------
-    # def reconcile(self):
-    #     """
-    #     After removing non-matching sizes, names, parent_names, and types the different collections may be out of sync.
-    #     Specifically, there may have been AFile object instances that were removed from one that should also now be
-    #     removed from all the others. This function takes care of that.
-    #
-    #     :return: Nothing.
-    #     """
-    #
-    #     # Wait a minute... do I really want to do this???
-    #     pass
+    # ------------------------------------------------------------------------------------------------------------------
+    def keys(self):
+        """
+        Yields each key from the afile_objs dict as part of an iterator.
+
+        :return: all the keys as a list.
+        """
+
+        for key in self.afile_objs.keys():
+            yield key
+
+        return list(self.afile_objs.keys())
