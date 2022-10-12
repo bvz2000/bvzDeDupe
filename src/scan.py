@@ -93,7 +93,7 @@ class Scan(object):
         :param compare_on_cdate: If True, then the creation date of the files will have to match in order for two files
                to be considered identical.
         :param skip_sub_dir: If True, then no subdirectories will be included (only the top-level directory will be
-               scanned. Defaults to False.
+               scanned). Defaults to False.
         :param skip_hidden: If True, then hidden files will be ignored in the scan. Defaults to False.
         :param skip_zero_len: If True, then files of zero length will be skipped. Defaults to True.
         :param incl_dir_regex: A regular expression to filter matching directories. Only those that match this regex
