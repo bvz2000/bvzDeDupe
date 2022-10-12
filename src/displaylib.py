@@ -57,7 +57,7 @@ def display_progress(count,
     percent = round((count * 1.0) / total * 100, 1)
 
     # only update the display if the percentage has changed
-    if percent == old_percent:
+    if percent == old_percent and percent != 0:
         return percent
 
     # build the completed and uncompleted portions of the progress bar
