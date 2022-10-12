@@ -93,6 +93,7 @@ displaylib.display_message(f"               Canonical Directory: {{BRIGHT_YELLOW
 displaylib.display_message(f"No. files already in canonical dir: {{BRIGHT_YELLOW}}{len(matches)}")
 displaylib.display_message(f"            No. unique query files: {{BRIGHT_YELLOW}}{len(unique)}")
 
-print("\n\n")
+displaylib.display_message("\n\n\n{{BRIGHT_RED}}THIS CODE IS CURRENTLY BROKEN!!!! IT WILL NOT IDENTIFY ALL DUPLICATES.")
+displaylib.display_message("{{BRIGHT_RED}}DO NOT  -- REPEAT.. DO  NOT  --  RELY ON THIS TOOL TO CORRECTLY ID DUPLICATES.")
 # for item in matches:
 #     print(query_scan_obj.afile_objs[item[0]].name, item[1])
