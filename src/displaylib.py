@@ -182,7 +182,7 @@ def display_refreshable_message(*msgs):
 def finish_refreshable_message():
     """
     Called when the refreshable message is no longer needed (prevents the next printed statement from overwriting the
-    last version of the refreshed message.
+    last version of the refreshed message).
 
     :return: Nothing.
     """
