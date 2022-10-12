@@ -22,5 +22,3 @@ class AFile:
         self.file_type = os.path.splitext(self.name)[1]
         self.parent_name = os.path.split(os.path.split(self.path)[0])[1]
         self.md5 = ""
-
-
