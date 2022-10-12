@@ -1,57 +1,98 @@
 #! /usr/bin/env python3
-
-import displaylib
-from scan import Scan
-
 """
-NOTE: This code is super super temp. Just to test out the modules. Once those are working, this code will be refactored
+NOTE: This code is SUPER SUPER TEMP. Just to test out the modules. Once those are working, this code will be refactored
 into a proper front end.
 """
 import sys
+import displaylib
+
+import comparefiles
+from scan import Scan
 
 query_path = sys.argv[1]
 canonical_path = sys.argv[2]
 
-displaylib.display_message("\n\n{{YELLOW}}QUERY DIRECTORY")
+displaylib.display_message("\n\n{{BRIGHT_GREEN}}QUERY DIRECTORY")
 displaylib.display_message("="*80)
 
 query_scan_obj = Scan(query_path)
-for counter in query_scan_obj.scan(report_frequency=10):
-    displaylib.display_refreshable_message(f"Files scanned so far: {counter}")
+try:
+    for counter in query_scan_obj.scan(report_frequency=10):
+        displaylib.display_refreshable_message(f"Files scanned so far: {counter}")
+except IOError as e:
+    displaylib.display_message(f"{{BRIGHT_RED}}ERROR:{{COLOR_NONE}} {str(e)}")
+    sys.exit(1)
 displaylib.display_refreshable_message(" "*80)
 displaylib.finish_refreshable_message()
 
-displaylib.display_message(f"Number of files scanned: {query_scan_obj.checked_count}")
-displaylib.display_message(f"Number of links skipped: {query_scan_obj.skipped_links}")
-displaylib.display_message(f"Number of error files: {query_scan_obj.error_count}")
-displaylib.display_message(f"Error files: {query_scan_obj.error_files}")
-displaylib.display_message(f"Number of zero length files skipped: {query_scan_obj.skipped_zero_len}")
-displaylib.display_message(f"Number of hidden files skipped: {query_scan_obj.skipped_hidden}")
-displaylib.display_message(f"Number of files skipped because they were outside of the inclusion regex's: {query_scan_obj.skipped_include}")
-displaylib.display_message(f"Number of files skipped because they matched the exclusion regex's: {query_scan_obj.skipped_exclude}")
-displaylib.display_message(f"Number of files accumulated: {query_scan_obj.initial_count}")
+displaylib.display_message(f"Number of files scanned: {{BRIGHT_RED}}{query_scan_obj.checked_count}")
+displaylib.display_message(f"Number of error files: {{BRIGHT_RED}}{query_scan_obj.error_count}")
+displaylib.display_message(f"Number of links skipped: {{BRIGHT_RED}}{query_scan_obj.skipped_links}")
+displaylib.display_message(f"Number of zero length files skipped: {{BRIGHT_RED}}{query_scan_obj.skipped_zero_len}")
+displaylib.display_message(f"Number of hidden files skipped: {{BRIGHT_RED}}{query_scan_obj.skipped_hidden}")
+displaylib.display_message(f"Number of files skipped because they were outside of the inclusion regex's: {{BRIGHT_RED}}{query_scan_obj.skipped_include}")
+displaylib.display_message(f"Number of files skipped because they matched the exclusion regex's: {{BRIGHT_RED}}{query_scan_obj.skipped_exclude}")
+displaylib.display_message(f"Number of files accumulated: {{BRIGHT_RED}}{query_scan_obj.initial_count}")
 
-displaylib.display_message("\n\n{{RED}}CANONICAL DIRECTORY")
+displaylib.display_message("\n\n{{BRIGHT_GREEN}}CANONICAL DIRECTORY")
 displaylib.display_message("="*80)
 
 canonical_scan_obj = Scan(canonical_path)
-for counter in canonical_scan_obj.scan(report_frequency=10):
-    displaylib.display_refreshable_message(f"Files scanned so far: {counter}")
+try:
+    for counter in canonical_scan_obj.scan(report_frequency=10):
+        displaylib.display_refreshable_message(f"Files scanned so far: {counter}")
+except IOError as e:
+    displaylib.display_message(f"{{BRIGHT_RED}}ERROR:{{COLOR_NONE}} {str(e)}")
+    sys.exit(1)
 displaylib.display_refreshable_message(" "*80)
 displaylib.finish_refreshable_message()
 
-displaylib.display_message(f"Number of files scanned: {canonical_scan_obj.checked_count}")
-displaylib.display_message(f"Number of links skipped: {canonical_scan_obj.skipped_links}")
-displaylib.display_message(f"Number of error files: {canonical_scan_obj.error_count}")
-displaylib.display_message(f"Error files: {canonical_scan_obj.error_files}")
-displaylib.display_message(f"Number of zero length files skipped: {canonical_scan_obj.skipped_zero_len}")
-displaylib.display_message(f"Number of hidden files skipped: {canonical_scan_obj.skipped_hidden}")
-displaylib.display_message(f"Number of files skipped because they were outside of the inclusion regex's: {canonical_scan_obj.skipped_include}")
-displaylib.display_message(f"Number of files skipped because they matched the exclusion regex's: {canonical_scan_obj.skipped_exclude}")
-displaylib.display_message(f"Number of files accumulated: {canonical_scan_obj.initial_count}")
+displaylib.display_message(f"Number of files scanned: {{BRIGHT_RED}}{canonical_scan_obj.checked_count}")
+displaylib.display_message(f"Number of error files: {{BRIGHT_RED}}{canonical_scan_obj.error_count}")
+displaylib.display_message(f"Number of links skipped: {{BRIGHT_RED}}{canonical_scan_obj.skipped_links}")
+displaylib.display_message(f"Number of zero length files skipped: {{BRIGHT_RED}}{canonical_scan_obj.skipped_zero_len}")
+displaylib.display_message(f"Number of hidden files skipped: {{BRIGHT_RED}}{canonical_scan_obj.skipped_hidden}")
+displaylib.display_message(f"Number of files skipped because they were outside of the inclusion regex's: {{BRIGHT_RED}}{canonical_scan_obj.skipped_include}")
+displaylib.display_message(f"Number of files skipped because they matched the exclusion regex's: {{BRIGHT_RED}}{canonical_scan_obj.skipped_exclude}")
+displaylib.display_message(f"Number of files accumulated: {{BRIGHT_RED}}{canonical_scan_obj.initial_count}")
 
-# displaylib.display_message("\n\nRemoving from Query Directory List any files that are guaranteed unique because no files of their size exist in the canoncial directory.")
-# query_scan_obj.id_non_matching_size_afile_objs(list(canonical_scan_obj.by_size.keys()))
-#
-# displaylib.display_message("\n\nRemoving from Canonical Directory List any files that are guaranteed unique because no files of their size exist in the query directory.")
-# canonical_scan_obj.id_non_matching_size_afile_objs(list(query_scan_obj.by_size.keys()))
+displaylib.display_message("\n\n{{BRIGHT_YELLOW}}NUMBER OF POTENTIAL MATCHES")
+displaylib.display_message("="*80)
+
+query_keys = list(query_scan_obj.afile_objs.keys())
+canonical_keys = list(canonical_scan_obj.afile_objs.keys())
+num_possible_matches = len([key for key in query_keys if key in canonical_keys])
+
+displaylib.display_message(f"Number of potential matches: {{BRIGHT_RED}}{num_possible_matches}")
+
+displaylib.display_message("\n\n{{BRIGHT_YELLOW}}COMPARING FILES:")
+displaylib.display_message("="*80)
+
+count = 0
+old_percent = 0
+matches = list()
+unique = list()
+for key in query_scan_obj.keys():
+    if key in canonical_scan_obj.keys():
+        old_percent = displaylib.display_progress(count=count,
+                                                  total=num_possible_matches,
+                                                  old_percent=old_percent)
+        checksum = comparefiles.compare(query_scan_obj.afile_objs[key].path, canonical_scan_obj.afile_objs[key].path)
+        if checksum:
+            matches.append((key, checksum))
+            canonical_scan_obj.afile_objs[key].md5 = checksum  # <- for the future when we store the checksum for multiple runs
+        else:
+            unique.append((key, checksum))
+        count += 1
+
+displaylib.display_message("\n\n\n{{BRIGHT_GREEN}}RESULTS:")
+displaylib.display_message("="*80)
+
+displaylib.display_message(f"                   Query Directory: {{BRIGHT_YELLOW}}{query_path}")
+displaylib.display_message(f"               Canonical Directory: {{BRIGHT_YELLOW}}{canonical_path}")
+displaylib.display_message(f"No. files already in canonical dir: {{BRIGHT_YELLOW}}{len(matches)}")
+displaylib.display_message(f"            No. unique query files: {{BRIGHT_YELLOW}}{len(unique)}")
+
+print("\n\n")
+# for item in matches:
+#     print(query_scan_obj.afile_objs[item[0]].name, item[1])
