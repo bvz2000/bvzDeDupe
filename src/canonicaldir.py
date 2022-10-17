@@ -82,3 +82,73 @@ class CanonicalDir(ScanDir):
         self._append_to_dict(by_dict=self.by_mtime,
                              key=metadata["mtime"],
                              file_path=file_path)
+
+    # ------------------------------------------------------------------------------------------------------------------
+    def get_intersection(self,
+                         size,
+                         name=None,
+                         file_type=None,
+                         parent=None,
+                         rel_path=None,
+                         ctime=None,
+                         mtime=None):
+        """
+        Returns a set of file paths that exist at the intersection of the given attributes. Any attributes that are set
+        to None are ignored.
+        
+        For example: If size=1024, name="bob.txt" and all other attributes are None, then a set will be returned that
+        contains all file paths that exist in BOTH the by_size[1024] dictionary and by_name["bob.txt"] dictionary.
+
+        :param size: The file size key. This attribute is required.
+        :param name: The file name key. If None, then this attribute is ignored when creating the intersection.
+        :param file_type: The file_type key. If None, then this attribute is ignored when creating the intersection.
+        :param parent: The parent key. If None, then this attribute is ignored when creating the intersection.
+        :param rel_path: The rel_path key. If None, then this attribute is ignored when creating the intersection.
+        :param ctime: The ctime key. If None, then this attribute is ignored when creating the intersection.
+        :param mtime: The mtime key. If None, then this attribute is ignored when creating the intersection.
+
+        :return: A set of file paths that exist in the intersection of all the dictionaries whose passed attribute
+                 is not None.
+        """
+
+        try:
+            size_set = self.by_size[size]
+        except KeyError:
+            size_set = set()
+
+        sets = list()
+
+        try:
+            sets.append(self.by_name[name])
+        except KeyError:
+            pass
+
+        try:
+            sets.append(self.by_type[file_type])
+        except KeyError:
+            pass
+
+        try:
+            sets.append(self.by_parent[parent])
+        except KeyError:
+            pass
+
+        try:
+            sets.append(self.by_rel_path[rel_path])
+        except KeyError:
+            pass
+
+        try:
+            sets.append(self.by_ctime[ctime])
+        except KeyError:
+            pass
+
+        try:
+            sets.append(self.by_mtime[mtime])
+        except KeyError:
+            pass
+
+        intersection = size_set.intersection(*sets)
+
+        return intersection
+
