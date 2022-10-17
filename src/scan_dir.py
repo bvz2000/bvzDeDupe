@@ -2,9 +2,6 @@
 
 import os.path
 import re
-import sqlite3
-import time
-import tempfile
 
 
 class ScanDir(object):
@@ -14,9 +11,7 @@ class ScanDir(object):
 
     # ------------------------------------------------------------------------------------------------------------------
     def __init__(self,
-                 scan_dir,
-                 connection,
-                 cursor):
+                 scan_dir):
         """
         :param scan_dir: The directory to scan.
         """
@@ -24,14 +19,14 @@ class ScanDir(object):
         assert type(scan_dir) is str
 
         self.scan_dir = scan_dir
-        self.scan_name = f"scan{str(time.time()).replace('.','')}"
 
-        self.connection = connection
-        self.cursor = cursor
-
-        self._build_scan_table()
-
-        # self.afile_objs = dict()
+        self.by_size = dict()
+        self.by_name = dict()
+        self.by_parent = dict()
+        self.by_type = dict()
+        self.by_rel_path = dict()
+        self.by_ctime = dict()
+        self.by_mtime = dict()
 
         self.error_files = set()
 
@@ -45,24 +40,28 @@ class ScanDir(object):
         self.skipped_include = 0
 
     # ------------------------------------------------------------------------------------------------------------------
-    def _build_scan_table(self):
+    @staticmethod
+    def _append_to_dict(by_dict,
+                        key,
+                        file_path):
         """
-        Creates the empty scan table.
+        Appends the file_path to the given dictionary.
 
-        :return: Nothing.
+        :param by_dict:
+        :param file_path:
+        :return:
         """
 
-        sql = f"CREATE TABLE {self.scan_name} (size INTEGER, name TEXT NOT NULL, parent TEXT NOT NULL, "\
-              "file_type TEXT NOT NULL, rel_path TEXT NOT NULL, ctime INTEGER, mtime INTEGER, path TEXT NOT NULL, "\
-              "checksum TEXT, PRIMARY KEY(name, rel_path));"
-        self.cursor.execute(sql)
-        self.connection.commit()
+        try:
+            by_dict[key].add(file_path)
+        except KeyError:
+            by_dict[key] = {file_path}
 
     # ------------------------------------------------------------------------------------------------------------------
     def _append_to_scan(self,
                         file_path):
         """
-        Appends a new file to the scan table.
+        Appends a new file to the scan dictionaries.
 
         :param file_path: The path to the file to add
 
@@ -77,10 +76,33 @@ class ScanDir(object):
         ctime = os.stat(file_path).st_ctime  # Not always the creation time, but as close as it gets.
         mtime = os.stat(file_path).st_mtime
 
-        sql = f"INSERT INTO {self.scan_name} (size, name, parent, file_type, rel_path, ctime, mtime, path) VALUES "\
-              "(?, ?, ?, ?, ?, ?, ?, ?);"
-        self.cursor.execute(sql, (size, name, parent, file_type, rel_path, ctime, mtime, self.scan_dir))
-        self.connection.commit()
+        self._append_to_dict(by_dict=self.by_size,
+                             key=size,
+                             file_path=file_path)
+
+        self._append_to_dict(by_dict=self.by_name,
+                             key=name,
+                             file_path=file_path)
+
+        self._append_to_dict(by_dict=self.by_type,
+                             key=file_type,
+                             file_path=file_path)
+
+        self._append_to_dict(by_dict=self.by_parent,
+                             key=parent,
+                             file_path=file_path)
+
+        self._append_to_dict(by_dict=self.by_rel_path,
+                             key=rel_path,
+                             file_path=file_path)
+
+        self._append_to_dict(by_dict=self.by_ctime,
+                             key=ctime,
+                             file_path=file_path)
+
+        self._append_to_dict(by_dict=self.by_mtime,
+                             key=mtime,
+                             file_path=file_path)
 
     # ------------------------------------------------------------------------------------------------------------------
     def scan(self,
