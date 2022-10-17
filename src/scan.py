@@ -29,21 +29,6 @@ class Scan(object):
         self.canonical_dir = canonical_dir
         self.report_frequency = report_frequency
 
-        self.connection, self.cursor = self._connect()
-
-    # ------------------------------------------------------------------------------------------------------------------
-    @staticmethod
-    def _connect():
-        """
-        Creates a new sqlite3 database in memory.
-
-        :return: A sqlite3 connection object.
-        """
-
-        connection = sqlite3.connect("file::memory:")
-        cursor = connection.cursor()
-        return connection, cursor
-
     # ------------------------------------------------------------------------------------------------------------------
     def do_query_scan(self):
         """
@@ -52,9 +37,7 @@ class Scan(object):
         :return: Nothing.
         """
 
-        self.query_scan = ScanDir(scan_dir=self.query_dir,
-                                  connection=self.connection,
-                                  cursor=self.cursor)
+        self.query_scan = ScanDir(scan_dir=self.query_dir)
         for file_count in self.query_scan.scan(report_frequency=self.report_frequency):
             yield file_count
 
@@ -66,8 +49,6 @@ class Scan(object):
         :return: Nothing.
         """
 
-        self.canonical_scan = ScanDir(scan_dir=self.canonical_dir,
-                                      connection=self.connection,
-                                      cursor=self.cursor)
+        self.canonical_scan = ScanDir(scan_dir=self.canonical_dir)
         for file_count in self.canonical_scan.scan(report_frequency=self.report_frequency):
             yield file_count
