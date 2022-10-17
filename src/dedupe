@@ -66,6 +66,22 @@ for count in session_obj.do_compare():
     old_percent = displaylib.display_progress(count=count,
                                               total=len(session_obj.query_scan.files),
                                               old_percent=old_percent)
+displaylib.display_message("\n")
+
+# ----------------------------------------------------------------------------------------------------------------------
+displaylib.display_message("\n\n{{BRIGHT_GREEN}}RESULTS:")
+displaylib.display_message("="*80)
+
+displaylib.display_message(f"Number of files checked: {{BRIGHT_RED}}{len(session_obj.query_scan.files)}")
+displaylib.display_message(f"Number of duplicate files: {{BRIGHT_RED}}{len(session_obj.actual_matches)}")
+displaylib.display_message(f"Number of times a checksum was reused: {{BRIGHT_RED}}{session_obj.pre_computed_checksum_count}")
+
+result = ""
+displaylib.display_message("\n\n")
+while result.lower() not in {"yes", "y", "no", "n"}:
+    result = input("Do you want to display the matching files? (Y/N)")
+    if result.lower() in {"no", "n"}:
+        sys.exit(0)
 
 # ----------------------------------------------------------------------------------------------------------------------
 displaylib.display_message("\n\n{{BRIGHT_GREEN}}MATCHES")
