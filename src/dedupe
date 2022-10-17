@@ -38,6 +38,9 @@ displaylib.display_message(f"Number of files skipped because they were outside o
 displaylib.display_message(f"Number of files skipped because they matched the exclusion regex's: {{BRIGHT_RED}}{scan_obj.query_scan.skipped_exclude}")
 displaylib.display_message(f"Number of files accumulated: {{BRIGHT_RED}}{scan_obj.query_scan.initial_count}")
 
+scan_obj.do_compare()
+sys.exit()
+
 # ----------------------------------------------------------------------------------------------------------------------
 displaylib.display_message("\n\n{{BRIGHT_GREEN}}CANONICAL DIRECTORY")
 displaylib.display_message("="*80)

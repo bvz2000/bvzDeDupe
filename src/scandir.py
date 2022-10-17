@@ -20,14 +20,6 @@ class ScanDir(object):
 
         self.scan_dir = scan_dir
 
-        self.by_size = dict()
-        self.by_name = dict()
-        self.by_parent = dict()
-        self.by_type = dict()
-        self.by_rel_path = dict()
-        self.by_ctime = dict()
-        self.by_mtime = dict()
-
         self.error_files = set()
 
         self.initial_count = 0
@@ -40,69 +32,38 @@ class ScanDir(object):
         self.skipped_include = 0
 
     # ------------------------------------------------------------------------------------------------------------------
-    @staticmethod
-    def _append_to_dict(by_dict,
-                        key,
-                        file_path):
+    def _get_metadata(self,
+                      file_path):
         """
-        Appends the file_path to the given dictionary.
+        Gets the metadata for the given file path.
 
-        :param by_dict:
-        :param file_path:
-        :return:
+        :param file_path: The path to the file to add
+
+        :return: A dictionary of attributes.
         """
 
-        try:
-            by_dict[key].add(file_path)
-        except KeyError:
-            by_dict[key] = {file_path}
+        attrs = dict()
+        attrs["size"] = os.path.getsize(file_path)
+        attrs["name"] = os.path.split(file_path)[1]
+        attrs["file_type"] = os.path.splitext(attrs["name"])[1]
+        attrs["parent"] = os.path.split(os.path.split(file_path)[0])[1]
+        attrs["rel_path"] = os.path.relpath(file_path, self.scan_dir)
+        attrs["ctime"] = os.stat(file_path).st_ctime  # Not always the creation time, but as close as it gets.
+        attrs["mtime"] = os.stat(file_path).st_mtime
+
+        return attrs
 
     # ------------------------------------------------------------------------------------------------------------------
     def _append_to_scan(self,
-                        file_path):
+                        file_path,
+                        metadata):
         """
-        Appends a new file to the scan dictionaries.
-
-        :param file_path: The path to the file to add
+        To be overridden in subclass
 
         :return: Nothing.
         """
 
-        size = os.path.getsize(file_path)
-        name = os.path.split(file_path)[1]
-        file_type = os.path.splitext(name)[1]
-        parent = os.path.split(os.path.split(file_path)[0])[1]
-        rel_path = os.path.relpath(file_path, self.scan_dir)
-        ctime = os.stat(file_path).st_ctime  # Not always the creation time, but as close as it gets.
-        mtime = os.stat(file_path).st_mtime
-
-        self._append_to_dict(by_dict=self.by_size,
-                             key=size,
-                             file_path=file_path)
-
-        self._append_to_dict(by_dict=self.by_name,
-                             key=name,
-                             file_path=file_path)
-
-        self._append_to_dict(by_dict=self.by_type,
-                             key=file_type,
-                             file_path=file_path)
-
-        self._append_to_dict(by_dict=self.by_parent,
-                             key=parent,
-                             file_path=file_path)
-
-        self._append_to_dict(by_dict=self.by_rel_path,
-                             key=rel_path,
-                             file_path=file_path)
-
-        self._append_to_dict(by_dict=self.by_ctime,
-                             key=ctime,
-                             file_path=file_path)
-
-        self._append_to_dict(by_dict=self.by_mtime,
-                             key=mtime,
-                             file_path=file_path)
+        raise NotImplementedError
 
     # ------------------------------------------------------------------------------------------------------------------
     def scan(self,
@@ -200,7 +161,10 @@ class ScanDir(object):
 
                 self.initial_count += 1
 
-                self._append_to_scan(file_path)
+                file_metadata = self._get_metadata(file_path)
+
+                self._append_to_scan(file_path=file_path,
+                                     metadata=file_metadata)
 
                 if skip_sub_dir:
                     sub_folders[:] = []
