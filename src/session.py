@@ -33,6 +33,8 @@ class Session(object):
 
         self.actual_matches = dict()
 
+        self.pre_computed_checksum_count = 0
+
     # ------------------------------------------------------------------------------------------------------------------
     def do_query_scan(self):
         """
@@ -130,6 +132,8 @@ class Session(object):
 
             for possible_match in possible_matches:
                 possible_match_checksum = self.canonical_scan.get_checksum(possible_match)
+                if possible_match_checksum is not None:
+                    self.pre_computed_checksum_count += 1
                 checksum = comparefiles.compare(file_a_path=file_path,
                                                 file_b_path=possible_match,
                                                 file_b_checksum=possible_match_checksum,
