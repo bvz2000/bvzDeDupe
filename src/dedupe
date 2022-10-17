@@ -106,8 +106,16 @@ if "-m" in sys.argv:
 else:
     mtime = False
 
+# TODO: Replace the None's with actual values to control the scanning
 session_obj = Session(query_dir=query_path,
                       canonical_dir=canonical_path,
+                      skip_sub_dir=None,
+                      skip_hidden=None,
+                      skip_zero_len=None,
+                      incl_dir_regex=None,
+                      excl_dir_regex=None,
+                      incl_file_regex=None,
+                      excl_file_regex=None,
                       report_frequency=10)
 
 # ----------------------------------------------------------------------------------------------------------------------
