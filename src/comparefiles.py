@@ -43,12 +43,12 @@ def md5_full_match(file_a_path,
                    file_b_path):
     """
     Performs a full md5 checksum compare between two files. If the files match, the md5 hash is returned. If they do not
-    match, None is returned.
+    match, False is returned.
 
     :param file_a_path: The first file to compare
     :param file_b_path: The second file to compare
 
-    :return: The checksum of the files if they match, None otherwise.
+    :return: The checksum of the files if they match, False otherwise.
     """
 
     md5 = hashlib.md5()
@@ -66,7 +66,7 @@ def md5_full_match(file_a_path,
     if checksum_a == checksum_b:
         return checksum_b
     else:
-        return None
+        return False
 
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -74,7 +74,7 @@ def compare(file_a_path,
             file_b_path,
             single_pass=False):
     """
-    Compares two files. Returns True if they are identical. False if not.
+    Compares two files. Returns the md5 checksum of the files if they are identical. False if not.
 
     :param file_a_path: The first file to be compared.
     :param file_b_path: The second file to be compared.
@@ -82,7 +82,7 @@ def compare(file_a_path,
            only the first 1K bytes of each file will be checksummed. Only if these bytes match will a second, full
            checksum of both files be done.
 
-    :return: True the files are identical, False otherwise.
+    :return: The md5 checksum if the files are identical, False otherwise.
     """
 
     assert os.path.exists(file_a_path)
