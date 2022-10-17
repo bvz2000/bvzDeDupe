@@ -144,4 +144,3 @@ class Session(object):
                         self.actual_matches[file_path].append(possible_match)
                     except KeyError:
                         self.actual_matches[file_path] = [possible_match]
-
