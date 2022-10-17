@@ -6,7 +6,6 @@ into a proper front end.
 import sys
 import displaylib
 
-import comparefiles
 from session import Session
 
 query_path = sys.argv[1]
@@ -77,39 +76,3 @@ for file_path, matches in session_obj.actual_matches.items():
     for match in matches:
         displaylib.display_message(f"    {{BRIGHT_CYAN}}{match}")
     displaylib.display_message("\n\n")
-#
-# query_keys = list(query_scan_obj.afile_objs.keys())
-# canonical_keys = list(canonical_scan_obj.afile_objs.keys())
-# num_possible_matches = len([key for key in query_keys if key in canonical_keys])
-#
-# displaylib.display_message(f"Number of potential matches: {{BRIGHT_RED}}{num_possible_matches}")
-
-# count = 0
-# old_percent = 0
-# matches = list()
-# unique = list()
-# for key in query_scan_obj.keys():
-#     if key in canonical_scan_obj.keys():
-#         old_percent = displaylib.display_progress(count=count,
-#                                                   total=num_possible_matches,
-#                                                   old_percent=old_percent)
-#         checksum = comparefiles.compare(query_scan_obj.afile_objs[key].path, canonical_scan_obj.afile_objs[key].path)
-#         if checksum:
-#             matches.append((key, checksum))
-#             canonical_scan_obj.afile_objs[key].md5 = checksum  # <- for the future when we store the checksum for multiple runs
-#         else:
-#             unique.append((key, checksum))
-#         count += 1
-#
-# displaylib.display_message("\n\n\n{{BRIGHT_GREEN}}RESULTS:")
-# displaylib.display_message("="*80)
-#
-# displaylib.display_message(f"                   Query Directory: {{BRIGHT_YELLOW}}{query_path}")
-# displaylib.display_message(f"               Canonical Directory: {{BRIGHT_YELLOW}}{canonical_path}")
-# displaylib.display_message(f"No. files already in canonical dir: {{BRIGHT_YELLOW}}{len(matches)}")
-# displaylib.display_message(f"            No. unique query files: {{BRIGHT_YELLOW}}{len(unique)}")
-#
-# displaylib.display_message("\n\n\n{{BRIGHT_RED}}THIS CODE IS CURRENTLY BROKEN!!!! IT WILL NOT IDENTIFY ALL DUPLICATES.")
-# displaylib.display_message("{{BRIGHT_RED}}DO NOT  -- REPEAT.. DO  NOT  --  RELY ON THIS TOOL TO CORRECTLY ID DUPLICATES.")
-# # for item in matches:
-# #     print(query_scan_obj.afile_objs[item[0]].name, item[1])
