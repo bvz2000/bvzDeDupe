@@ -15,13 +15,33 @@ class Session(object):
     def __init__(self,
                  query_dir,
                  canonical_dir,
+                 skip_sub_dir=False,
+                 skip_hidden=False,
+                 skip_zero_len=True,
+                 incl_dir_regex=None,
+                 excl_dir_regex=None,
+                 incl_file_regex=None,
+                 excl_file_regex=None,
                  report_frequency=1000):
         """
         Init.
 
         :param query_dir: The full query directory path.
         :param canonical_dir: The full canonical directory path.
-        :param report_frequency: How many files to scan before reporting back to the calling function.
+        :param skip_sub_dir: If True, then no subdirectories will be included (only the top-level directory will be
+               scanned). Defaults to False.
+        :param skip_hidden: If True, then hidden files will be ignored in the scan. Defaults to False.
+        :param skip_zero_len: If True, then files of zero length will be skipped. Defaults to True.
+        :param incl_dir_regex: A regular expression to filter matching directories. Only those that match this regex
+               will be INCLUDED. If None, no filtering will be done. Defaults to None.
+        :param excl_dir_regex: A regular expression to filter matching directories. Those that match this regex
+               will be EXCLUDED. If None, no filtering will be done. Defaults to None.
+        :param incl_file_regex: A regular expression to filter matching files. Only those that match this regex
+               will be INCLUDED. If None, no filtering will be done. Defaults to None.
+        :param excl_file_regex: A regular expression to filter matching files. Those that match this regex
+               will be EXCLUDED. If None, no filtering will be done. Defaults to None.
+        :param report_frequency: How many files to scan before reporting back a count of scanned files to the calling
+               function.
         """
 
         self.canonical_scan = None
@@ -29,6 +49,13 @@ class Session(object):
 
         self.query_dir = query_dir
         self.canonical_dir = canonical_dir
+        self.skip_sub_dir = skip_sub_dir
+        self.skip_hidden = skip_hidden
+        self.skip_zero_len = skip_zero_len
+        self.incl_dir_regex = incl_dir_regex
+        self.excl_dir_regex = excl_dir_regex
+        self.incl_file_regex = incl_file_regex
+        self.excl_file_regex = excl_file_regex
         self.report_frequency = report_frequency
 
         self.actual_matches = dict()
@@ -44,7 +71,14 @@ class Session(object):
         """
 
         self.query_scan = QueryDir(scan_dir=self.query_dir)
-        for file_count in self.query_scan.scan(report_frequency=self.report_frequency):
+        for file_count in self.query_scan.scan(skip_sub_dir=self.skip_sub_dir,
+                                               skip_hidden=self.skip_hidden,
+                                               skip_zero_len=self.skip_zero_len,
+                                               incl_dir_regex=self.incl_dir_regex,
+                                               excl_dir_regex=self.excl_dir_regex,
+                                               incl_file_regex=self.incl_file_regex,
+                                               excl_file_regex=self.excl_file_regex,
+                                               report_frequency=self.report_frequency):
             yield file_count
 
     # ------------------------------------------------------------------------------------------------------------------
