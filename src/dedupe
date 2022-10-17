@@ -49,8 +49,32 @@ Note: Each option must have its own hyphen (dash). For example, You may not do t
       You must do this: -n -p -t -r -c -m.
 """
 
+if "-h" in sys.argv:
+    displaylib.display_message(helpmsg)
+    sys.exit(1)
+
+if len(sys.argv) < 3:
+    displaylib.display_message(f"{{RED}}Missing required arguments")
+    displaylib.display_message(helpmsg)
+    sys.exit(1)
+
+if len(sys.argv) > 3:
+    for item in sys.argv[3:]:
+        if item not in ["-n", "-p", "-t", "-r", "-c", "-m"]:
+            displaylib.display_message(f"{{RED}}Unknown option: {item}")
+            displaylib.display_message(helpmsg)
+            sys.exit(2)
+
 query_path = sys.argv[1]
 canonical_path = sys.argv[2]
+
+if not os.path.exists(query_path) or not os.path.isdir(query_path):
+    displaylib.display_message(f"{{RED}}Query path ({query_path}) either does not exist or is not a directory.")
+    sys.exit(3)
+
+if not os.path.exists(canonical_path) or not os.path.isdir(canonical_path):
+    displaylib.display_message(f"{{RED}}Canonical path ({canonical_path}) either does not exist or is not a directory.")
+    sys.exit(3)
 
 if "-n" in sys.argv:
     name=True
@@ -81,16 +105,6 @@ if "-m" in sys.argv:
     mtime = True
 else:
     mtime = False
-
-if "-h" in sys.argv:
-    displaylib.display_message(helpmsg)
-    sys.exit(1)
-
-for item in sys.argv[3:]:
-    if item not in ["-n", "-p", "-t", "-r", "-c", "-m"]:
-        displaylib.display_message(f"{{RED}}Unknown option: {item}")
-        displaylib.display_message(helpmsg)
-        sys.exit(2)
 
 session_obj = Session(query_dir=query_path,
                       canonical_dir=canonical_path,
