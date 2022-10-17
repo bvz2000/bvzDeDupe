@@ -129,9 +129,13 @@ class Session(object):
                 continue
 
             for possible_match in possible_matches:
-                if comparefiles.compare(file_a_path=file_path,
-                                        file_b_path=possible_match,
-                                        single_pass=True):
+                possible_match_checksum = self.canonical_scan.get_checksum(possible_match)
+                checksum = comparefiles.compare(file_a_path=file_path,
+                                                file_b_path=possible_match,
+                                                file_b_checksum=possible_match_checksum,
+                                                single_pass=True)
+                if checksum:
+                    self.canonical_scan.checksum[possible_match] = checksum
                     try:
                         self.actual_matches[file_path].append(possible_match)
                     except KeyError:
