@@ -74,10 +74,10 @@ class Session(object):
         for file_count in self.query_scan.scan(skip_sub_dir=self.skip_sub_dir,
                                                skip_hidden=self.skip_hidden,
                                                skip_zero_len=self.skip_zero_len,
-                                               incl_dir_regex=self.incl_dir_regex,
-                                               excl_dir_regex=self.excl_dir_regex,
-                                               incl_file_regex=self.incl_file_regex,
-                                               excl_file_regex=self.excl_file_regex,
+                                               incl_dir_regexes=self.incl_dir_regex,
+                                               excl_dir_regexes=self.excl_dir_regex,
+                                               incl_file_regexes=self.incl_file_regex,
+                                               excl_file_regexes=self.excl_file_regex,
                                                report_frequency=self.report_frequency):
             yield file_count
 
