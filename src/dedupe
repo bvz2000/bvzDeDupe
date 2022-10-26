@@ -8,7 +8,15 @@ import os
 import sys
 import displaylib
 
+import parser
 from session import Session
+
+cmdline_parser = parser.init_parser()
+args = cmdline_parser.parse_args(sys.argv[1:])
+print(args)
+sys.exit(0)
+
+
 
 helpmsg = f"""
 A program to compare all of the files in a query directory to the files in a
@@ -33,11 +41,11 @@ Usage: {os.path.split(sys.argv[0])[1]} <query directory> <canonical directory> <
 
 -n    The names of the files must match in order for the files to be considered 
       duplicates.
--p    The names of the parent directories of the files must match in order for 
+-p    The names of the immediate parent directory of each file must match in order for 
       the files to be considered duplicates.
 -t    The file types (extensions) of the files must match in order for the files 
       to be considered duplicates.
--r    The relative paths of the files must match in order for the files to be 
+-r    The full relative paths of the files must match in order for the files to be 
       considered duplicates.
 -c    The creation date and time of the files must match in order for the files 
       to be considered duplicates.
