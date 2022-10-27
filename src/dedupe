@@ -4,7 +4,6 @@ NOTE: This code is SUPER SUPER TEMP. Just to test out the modules. Once those ar
 into a proper front end.
 """
 
-import os
 import sys
 import displaylib
 
@@ -13,117 +12,16 @@ from session import Session
 
 cmdline_parser = parser.init_parser()
 args = cmdline_parser.parse_args(sys.argv[1:])
-print(args)
-sys.exit(0)
 
-
-
-helpmsg = f"""
-A program to compare all of the files in a query directory to the files in a
-canonical directory and list any which are duplicates. The query directory is
-the directory where you may have a bunch of files that may or may not already
-exist in another location (the canonical location where they are supposed to
-reside). Using this program you can decide whether you need to copy the files
-from the query directory to the canonical location, or whether these files
-already exist in the canonical directory and may therefore be deleted from the
-query directory. Note: This program DOES NOT actually touch any files on disk.
-It merely reports on duplicates.
-
-You may decide which characteristics are considered when deciding whether two
-files are duplicates of each other or not.
-
-The possible characteristics are listed below. If you do not indicate any
-characteristics using the options provided, then the only thing that is considered
-is whether the contents of the files are identical, regardless of the file name,
-date, or location in the directory structure.
-
-Usage: {os.path.split(sys.argv[0])[1]} <query directory> <canonical directory> <-n -p -t -r -c -m -h>
-
--n    The names of the files must match in order for the files to be considered 
-      duplicates.
--p    The names of the immediate parent directory of each file must match in order for 
-      the files to be considered duplicates.
--t    The file types (extensions) of the files must match in order for the files 
-      to be considered duplicates.
--r    The full relative paths of the files must match in order for the files to be 
-      considered duplicates.
--c    The creation date and time of the files must match in order for the files 
-      to be considered duplicates.
--m    The modification date and time of the files must match in order for the 
-      files to be considered duplicates.
--h    Show this help string and exit.
-
-Note: Each option must have its own hyphen (dash). For example, You may not do this: -nptrcm. 
-      You must do this: -n -p -t -r -c -m.
-"""
-
-if "-h" in sys.argv:
-    displaylib.display_message(helpmsg)
-    sys.exit(1)
-
-if len(sys.argv) < 3:
-    displaylib.display_message(f"{{RED}}Missing required arguments")
-    displaylib.display_message(helpmsg)
-    sys.exit(1)
-
-if len(sys.argv) > 3:
-    for item in sys.argv[3:]:
-        if item not in ["-n", "-p", "-t", "-r", "-c", "-m"]:
-            displaylib.display_message(f"{{RED}}Unknown option: {item}")
-            displaylib.display_message(helpmsg)
-            sys.exit(2)
-
-query_path = sys.argv[1]
-canonical_path = sys.argv[2]
-
-if not os.path.exists(query_path) or not os.path.isdir(query_path):
-    displaylib.display_message(f"{{RED}}Query path ({query_path}) either does not exist or is not a directory.")
-    sys.exit(3)
-
-if not os.path.exists(canonical_path) or not os.path.isdir(canonical_path):
-    displaylib.display_message(f"{{RED}}Canonical path ({canonical_path}) either does not exist or is not a directory.")
-    sys.exit(3)
-
-if "-n" in sys.argv:
-    name=True
-else:
-    name = False
-
-if "-p" in sys.argv:
-    parent = True
-else:
-    parent = False
-
-if "-t" in sys.argv:
-    file_type = True
-else:
-    file_type = False
-
-if "-r" in sys.argv:
-    rel_path = True
-else:
-    rel_path = False
-
-if "-c" in sys.argv:
-    ctime = True
-else:
-    ctime = False
-
-if "-m" in sys.argv:
-    mtime = True
-else:
-    mtime = False
-
-# TODO: Replace the None's with actual values to control the scanning
-session_obj = Session(query_dir=query_path,
-                      canonical_dir=canonical_path,
-                      skip_sub_dir=None,
-                      skip_hidden=None,
-                      skip_zero_len=None,
-                      incl_dir_regex=None,
-                      excl_dir_regex=None,
-                      incl_file_regex=None,
-                      excl_file_regex=None,
+session_obj = Session(query_dir=args.query_dir,
+                      canonical_dir=args.canonical_dir,
+                      skip_sub_dir=args.skip_sub_dir,
+                      skip_hidden=not args.include_hidden,
+                      skip_zero_len=not args.include_zero_length,
+                      incl_dir_regex=args.incl_dir_regexes,
+                      excl_dir_regex=args.excl_dir_regexes,
+                      incl_file_regex=args.incl_file_regexes,
+                      excl_file_regex=args.excl_file_regexes,
                       report_frequency=10)
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -173,12 +71,12 @@ displaylib.display_message("\n\n{{BRIGHT_YELLOW}}COMPARING FILES:")
 displaylib.display_message("="*80)
 
 old_percent = 0
-for count in session_obj.do_compare(name=name,
-                                    file_type=file_type,
-                                    parent=parent,
-                                    rel_path=rel_path,
-                                    ctime=ctime,
-                                    mtime=mtime):
+for count in session_obj.do_compare(name=args.match_on_name,
+                                    file_type=args.match_on_type,
+                                    parent=args.match_on_parent,
+                                    rel_path=args.match_on_relpath,
+                                    ctime=args.match_on_ctime,
+                                    mtime=args.match_on_mtime):
     old_percent = displaylib.display_progress(count=count,
                                               total=len(session_obj.query_scan.files),
                                               old_percent=old_percent)
