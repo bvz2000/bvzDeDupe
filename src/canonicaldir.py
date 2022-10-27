@@ -120,35 +120,41 @@ class CanonicalDir(ScanDir):
 
         sets = list()
 
-        try:
-            sets.append(self.by_name[name])
-        except KeyError:
-            pass
+        if name:
+            try:
+                sets.append(self.by_name[name])
+            except KeyError:
+                return set()
 
-        try:
-            sets.append(self.by_type[file_type])
-        except KeyError:
-            pass
+        if file_type:
+            try:
+                sets.append(self.by_type[file_type])
+            except KeyError:
+                return set()
 
-        try:
-            sets.append(self.by_parent[parent])
-        except KeyError:
-            pass
+        if parent:
+            try:
+                sets.append(self.by_parent[parent])
+            except KeyError:
+                return set()
 
-        try:
-            sets.append(self.by_rel_path[rel_path])
-        except KeyError:
-            pass
+        if rel_path:
+            try:
+                sets.append(self.by_rel_path[rel_path])
+            except KeyError:
+                return set()
 
-        try:
-            sets.append(self.by_ctime[ctime])
-        except KeyError:
-            pass
+        if ctime:
+            try:
+                sets.append(self.by_ctime[ctime])
+            except KeyError:
+                return set()
 
-        try:
-            sets.append(self.by_mtime[mtime])
-        except KeyError:
-            pass
+        if mtime:
+            try:
+                sets.append(self.by_mtime[mtime])
+            except KeyError:
+                return set()
 
         intersection = size_set.intersection(*sets)
 
