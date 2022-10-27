@@ -87,6 +87,26 @@ class ScanDir(object):
         return [param_value]
 
     # ------------------------------------------------------------------------------------------------------------------
+    @staticmethod
+    def match_regex(regexes,
+                    items):
+        """
+        Given a list of regex expressions and a list of items, returns True if any of the items match any of the regex
+        expressions.
+
+        :param regexes: A list of regex expressions to check against.
+        :param items: A list of items to run the regex against.
+
+        :return: True if any item matches any regex. False otherwise.
+        """
+
+        for regex in regexes:
+            for item in items:
+                if re.match(str(regex), item) is not None:
+                    return True
+        return False
+
+    # ------------------------------------------------------------------------------------------------------------------
     def scan(self,
              skip_sub_dir=False,
              skip_hidden=False,
@@ -134,7 +154,7 @@ class ScanDir(object):
 
         for root, sub_folders, files in os.walk(self.scan_dir):
 
-            root_name = os.path.split(root)[1]
+            path_items = [item for item in root.split(os.path.sep) if item != ""]
 
             for file_name in files:
 
@@ -148,28 +168,24 @@ class ScanDir(object):
                     continue
 
                 if incl_dir_regexes:
-                    for incl_dir_regex in incl_dir_regexes:
-                        if re.match(str(incl_dir_regex), root_name) is None:
-                            self.skipped_include += 1
-                            continue
+                    if not self.match_regex(regexes=incl_dir_regexes, items=path_items):
+                        self.skipped_include += 1
+                        continue
 
                 if excl_dir_regexes is not None:
-                    for excl_dir_regex in excl_dir_regexes:
-                        if re.match(str(excl_dir_regex), root_name) is not None:
-                            self.skipped_exclude += 1
-                            continue
+                    if self.match_regex(regexes=excl_dir_regexes, items=path_items):
+                        self.skipped_exclude += 1
+                        continue
 
                 if incl_file_regexes is not None:
-                    for incl_file_regex in incl_file_regexes:
-                        if re.match(str(incl_file_regex), file_name) is None:
-                            self.skipped_include += 1
-                            continue
+                    if not self.match_regex(regexes=incl_file_regexes, items=[file_name]):
+                        self.skipped_include += 1
+                        continue
 
                 if excl_file_regexes is not None:
-                    for excl_file_regex in excl_file_regexes:
-                        if re.match(str(excl_file_regex), file_name) is not None:
-                            self.skipped_exclude += 1
-                            continue
+                    if self.match_regex(regexes=excl_file_regexes, items=[file_name]):
+                        self.skipped_exclude += 1
+                        continue
 
                 file_path = os.path.join(root, file_name)
 
