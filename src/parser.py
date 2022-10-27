@@ -36,14 +36,14 @@ def init_parser():
     parser = ArgumentParser(description=help_msg)
 
     help_str = "The query directory."
-    parser.add_argument('query directory',
-                        metavar='query_dir',
+    parser.add_argument('query_dir',
+                        metavar='query directory',
                         type=str,
                         help=help_str)
 
     help_str = "The canonical directory."
-    parser.add_argument('canonical directory',
-                        metavar='canonical_dir',
+    parser.add_argument('canonical_dir',
+                        metavar='canonical directory',
                         type=str,
                         help=help_str)
 
