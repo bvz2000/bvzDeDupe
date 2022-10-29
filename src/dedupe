@@ -1,8 +1,4 @@
 #! /usr/bin/env python3
-"""
-NOTE: This code is SUPER SUPER TEMP. Just to test out the modules. Once those are working, this code will be refactored
-into a proper front end.
-"""
 
 import sys
 import displaylib
@@ -10,18 +6,31 @@ import displaylib
 import parser
 from session import Session
 
-cmdline_parser = parser.init_parser()
-args = cmdline_parser.parse_args(sys.argv[1:])
+parser_obj = parser.Parser(sys.argv[1:])
+try:
+    parser_obj.validate()
+except (FileNotFoundError, NotADirectoryError, PermissionError) as e:
+    msg = f"{{RED}}Error:{{COLOR_NONE}} {e}"
+    displaylib.display_message(msg)
+    sys.exit(1)
+except FileExistsError as e:
+    msg= f"{{YELLOW}}Warning:{{COLOR_NONE}} {e}"
+    displaylib.display_message(msg)
+    result = ""
+    while result.upper() not in "YN":
+        displaylib.display_message("Overwrite file? (Y/N)")
+    if result.upper() != "Y":
+        sys.exit(0)
 
-session_obj = Session(query_dir=args.query_dir,
-                      canonical_dir=args.canonical_dir,
-                      skip_sub_dir=args.skip_sub_dir,
-                      skip_hidden=not args.include_hidden,
-                      skip_zero_len=not args.include_zero_length,
-                      incl_dir_regex=args.incl_dir_regexes,
-                      excl_dir_regex=args.excl_dir_regexes,
-                      incl_file_regex=args.incl_file_regexes,
-                      excl_file_regex=args.excl_file_regexes,
+session_obj = Session(query_dir=parser_obj.args.query_dir,
+                      canonical_dir=parser_obj.args.canonical_dir,
+                      skip_sub_dir=parser_obj.args.skip_sub_dir,
+                      skip_hidden=not parser_obj.args.include_hidden,
+                      skip_zero_len=not parser_obj.args.include_zero_length,
+                      incl_dir_regex=parser_obj.args.incl_dir_regexes,
+                      excl_dir_regex=parser_obj.args.excl_dir_regexes,
+                      incl_file_regex=parser_obj.args.incl_file_regexes,
+                      excl_file_regex=parser_obj.args.excl_file_regexes,
                       report_frequency=10)
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -71,12 +80,12 @@ displaylib.display_message("\n\n{{BRIGHT_YELLOW}}COMPARING FILES:")
 displaylib.display_message("="*80)
 
 old_percent = 0
-for count in session_obj.do_compare(name=args.match_on_name,
-                                    file_type=args.match_on_type,
-                                    parent=args.match_on_parent,
-                                    rel_path=args.match_on_relpath,
-                                    ctime=args.match_on_ctime,
-                                    mtime=args.match_on_mtime):
+for count in session_obj.do_compare(name=parser_obj.args.match_on_name,
+                                    file_type=parser_obj.args.match_on_type,
+                                    parent=parser_obj.args.match_on_parent,
+                                    rel_path=parser_obj.args.match_on_relpath,
+                                    ctime=parser_obj.args.match_on_ctime,
+                                    mtime=parser_obj.args.match_on_mtime):
     old_percent = displaylib.display_progress(count=count,
                                               total=len(session_obj.query_scan.files),
                                               old_percent=old_percent)
