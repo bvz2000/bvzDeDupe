@@ -147,4 +147,30 @@ def init_parser():
                         action="append",
                         help=help_str)
 
+    help_str = "One or more config files that contain all of the compare parameters that you would otherwise " \
+               "supply via the command line (things like which files to skip or regex's to use as filters). You " \
+               "may use this option more than once if you have multiple config files you wish to use. If you do " \
+               "supply more than one config file, the regex settings in the config files will be merged. The skip " \
+               "parameters will be taken only from the first listed config file. If you also supply command line " \
+               "parameters, then the command line regex patterns will be merged with those from the config file or "\
+               "files. Any boolean settings (such as the which files to skip) will be taken from the command line " \
+               "and will supercede any settings in the config file.     \n\nExample:\n\n     " \
+               "-C /path/to/config/fileA.cfg -C /path/to/config/fileB.cfg"
+    parser.add_argument("-C",
+                        dest="config_paths",
+                        type=str,
+                        action="append",
+                        help=help_str)
+
+    help_str = "Saves the settings passed via the command line to the specified config file without actually " \
+               "running the compare operation. If the config file already exists, you will be prompted as to whether " \
+               "you wish to overwrite it. If you also included other config files via the -C option, the contents of " \
+               "those config files (subject to the limitations described in the -C option) will be merged as part of " \
+               "this saved config file, effectively merging the various configs into a single file."
+    parser.add_argument("-w",
+                        dest="config_path",
+                        type=str,
+                        action="store",
+                        help=help_str)
+
     return parser
