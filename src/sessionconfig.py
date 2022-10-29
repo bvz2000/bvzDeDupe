@@ -270,3 +270,55 @@ class SessionConfig(object):
 
         count = len(self.config_obj.items(regex_name))
         self.config_obj.set(regex_name, f"regex{count + 1}", regex)
+
+    # ------------------------------------------------------------------------------------------------------------------
+    def add_incl_dir_regex(self,
+                           regex):
+        """
+        Adds a regular expression to the incl_dir_regex section.
+
+        :param regex: The regular expression to add.
+
+        :return: Nothing.
+        """
+
+        self.add_regex("incl_dir_regex", regex)
+
+    # ------------------------------------------------------------------------------------------------------------------
+    def add_excl_dir_regex(self,
+                           regex):
+        """
+        Adds a regular expression to the excl_dir_regex section.
+
+        :param regex: The regular expression to add.
+
+        :return: Nothing.
+        """
+
+        self.add_regex("excl_dir_regex", regex)
+
+    # ------------------------------------------------------------------------------------------------------------------
+    def add_incl_file_regex(self,
+                            regex):
+        """
+        Adds a regular expression to the incl_file_regex section.
+
+        :param regex: The regular expression to add.
+
+        :return: Nothing.
+        """
+
+        self.add_regex("incl_file_regex", regex)
+
+    # ------------------------------------------------------------------------------------------------------------------
+    def add_excl_file_regex(self,
+                            regex):
+        """
+        Adds a regular expression to the excl_file_regex section.
+
+        :param regex: The regular expression to add.
+
+        :return: Nothing.
+        """
+
+        self.add_regex("excl_file_regex", regex)
