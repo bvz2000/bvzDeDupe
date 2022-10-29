@@ -4,7 +4,7 @@ import configparser
 import os.path
 
 
-class SessionConfig(object):
+class Config(object):
     """
     A class to load, save, and manage a configuration of scan settings.
     """
@@ -13,8 +13,13 @@ class SessionConfig(object):
     def __init__(self,
                  config_path):
         """
+        Set up a configparser object and populate it with the contents of the config file. If the config file does not
+        exist, it will be created in memory but not saved to disk.
+
         :param config_path: The path to the config file. This file does not have to exist on disk. It will be created
-        as needed if it does not exist.
+        in memory as needed if it does not exist - but it will not automatically be saved to disk.
+
+        Return: Nothing.
         """
 
         self.config_path = config_path
@@ -32,8 +37,6 @@ class SessionConfig(object):
             self.config_obj.add_section("excl_dir_regexes")
             self.config_obj.add_section("incl_file_regexes")
             self.config_obj.add_section("excl_file_regexes")
-
-            self.save_config()
 
     # ------------------------------------------------------------------------------------------------------------------
     def save_config(self):
