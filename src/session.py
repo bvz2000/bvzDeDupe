@@ -59,6 +59,7 @@ class Session(object):
         self.report_frequency = report_frequency
 
         self.actual_matches = dict()
+        self.unique = set()
 
         self.pre_computed_checksum_count = 0
 
@@ -99,6 +100,19 @@ class Session(object):
                                                    excl_file_regexes=self.excl_file_regex,
                                                    report_frequency=self.report_frequency):
             yield file_count
+
+    # ------------------------------------------------------------------------------------------------------------------
+    def add_unique(self,
+                   file_p):
+        """
+        Adds a file path to the list of unique files.
+
+        :param file_p: The path to the unique file.
+
+        :return: Nothing.
+        """
+
+        self.unique.add(file_p)
 
     # ------------------------------------------------------------------------------------------------------------------
     def do_compare(self,
@@ -169,8 +183,10 @@ class Session(object):
                                                                     mtime=mtime)
 
             if len(possible_matches) == 0:
+                self.add_unique(file_path)
                 continue
 
+            match = False
             for possible_match in possible_matches:
 
                 if file_path == possible_match:  # Do not want to compare a file to itself - that is not a duplicate.
@@ -187,8 +203,12 @@ class Session(object):
                                                 single_pass=True)
 
                 if checksum:
+                    match = True
                     self.canonical_scan.checksum[possible_match] = checksum
                     try:
                         self.actual_matches[file_path].append(possible_match)
                     except KeyError:
                         self.actual_matches[file_path] = [possible_match]
+
+            if not match:
+                self.add_unique(file_path)
