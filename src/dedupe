@@ -1,5 +1,6 @@
 #! /usr/bin/env python3
 
+import os.path
 import sys
 import displaylib
 
@@ -32,6 +33,34 @@ session_obj = Session(query_dir=parser_obj.args.query_dir,
                       incl_file_regex=parser_obj.args.incl_file_regexes,
                       excl_file_regex=parser_obj.args.excl_file_regexes,
                       report_frequency=10)
+
+# ----------------------------------------------------------------------------------------------------------------------
+displaylib.display_message("\n\n{{BRIGHT_GREEN}}SUMMARY")
+displaylib.display_message("="*80)
+displaylib.display_message("                      Query directory:",
+                           "{{BRIGHT_YELLOW}}",
+                           os.path.abspath(parser_obj.args.query_dir))
+displaylib.display_message("                  Canonical directory:",
+                           "{{BRIGHT_YELLOW}}",
+                           os.path.abspath(parser_obj.args.canonical_dir))
+displaylib.display_message("                 Skip sub-directories:",
+                           displaylib.format_boolean(parser_obj.args.skip_sub_dir))
+displaylib.display_message("                    Skip hidden files:",
+                           displaylib.format_boolean(not parser_obj.args.include_hidden))
+displaylib.display_message("               Skip zero length files:",
+                           displaylib.format_boolean(not parser_obj.args.include_zero_length))
+displaylib.display_message("                     Names must match:",
+                           displaylib.format_boolean(parser_obj.args.match_on_name))
+displaylib.display_message("           File extensions must match:",
+                           displaylib.format_boolean(parser_obj.args.match_on_type))
+displaylib.display_message("     Parent directory name must match:",
+                           displaylib.format_boolean(parser_obj.args.match_on_parent))
+displaylib.display_message("            Relative paths must match:",
+                           displaylib.format_boolean(parser_obj.args.match_on_relpath))
+displaylib.display_message("    Creation date and time must match:",
+                           displaylib.format_boolean(parser_obj.args.match_on_ctime))
+displaylib.display_message("Modification date and time must match:",
+                           displaylib.format_boolean(parser_obj.args.match_on_mtime))
 
 # ----------------------------------------------------------------------------------------------------------------------
 displaylib.display_message("\n\n{{BRIGHT_GREEN}}QUERY DIRECTORY")
@@ -95,23 +124,42 @@ displaylib.display_message("\n")
 displaylib.display_message("\n\n{{BRIGHT_GREEN}}RESULTS:")
 displaylib.display_message("="*80)
 
-displaylib.display_message(f"Number of files checked: {{BRIGHT_RED}}{len(session_obj.query_scan.files)}")
-displaylib.display_message(f"Number of duplicate files: {{BRIGHT_RED}}{len(session_obj.actual_matches)}")
-displaylib.display_message(f"Number of times a checksum was reused: {{BRIGHT_RED}}{session_obj.pre_computed_checksum_count}")
+num_files_checked = f"{{BRIGHT_RED}}{len(session_obj.query_scan.files)}"
+num_duplicates = f"{{BRIGHT_RED}}{len(session_obj.actual_matches)}"
+num_unique = f"{{BRIGHT_RED}}{len(session_obj.unique)}"
+num_reused_checksum = f"{{BRIGHT_RED}}{session_obj.pre_computed_checksum_count}"
+
+displaylib.display_message(f"Number of files checked: {num_files_checked}")
+displaylib.display_message(f"Number of query files that are duplicates of canonical files: {num_duplicates}")
+displaylib.display_message(f"Number of query files that have no duplicates in canonical dir: {num_unique}")
+displaylib.display_message(f"Number of times a checksum was reused: {num_reused_checksum}")
 
 result = ""
 displaylib.display_message("\n\n")
-while result.lower() not in {"yes", "y", "no", "n"}:
-    result = input("Do you want to display the matching files? (Y/N)")
-    if result.lower() in {"no", "n"}:
+while result.lower() not in {"matching", "m", "unique", "u", "both", "b", "quit", "q"}:
+    matching = "{{BRIGHT_YELLOW}}M{{COLOR_NONE}}atching files"
+    unique = "{{BRIGHT_YELLOW}}U{{COLOR_NONE}}nique files"
+    both = "{{BRIGHT_YELLOW}}B{{COLOR_NONE}}oth"
+    quitapp = "{{BRIGHT_YELLOW}}Q{{COLOR_NONE}}uit"
+    prompt = displaylib.format_string(f"Display the {matching}, {unique}, {both}, or {quitapp}? (M/U/B/Q)")
+    result = input(prompt)
+    if result.lower() in {"quit", "q"}:
         sys.exit(0)
 
 # ----------------------------------------------------------------------------------------------------------------------
-displaylib.display_message("\n\n{{BRIGHT_GREEN}}MATCHES")
-displaylib.display_message("="*80)
+if result.lower() in {"matching", "m", "both", "b"}:
+    displaylib.display_message("\n\n{{BRIGHT_GREEN}}MATCHES")
+    displaylib.display_message("="*80)
 
-for file_path, matches in session_obj.actual_matches.items():
-    displaylib.display_message(file_path)
-    for match in matches:
-        displaylib.display_message(f"{{BRIGHT_CYAN}}{match}")
-    displaylib.display_message("\n\n")
+    for file_path, matches in session_obj.actual_matches.items():
+        displaylib.display_message(file_path)
+        for match in matches:
+            displaylib.display_message(f"{{BRIGHT_CYAN}}{match}")
+        displaylib.display_message("\n\n")
+
+if result.lower() in {"unique", "u", "both", "b"}:
+    displaylib.display_message("\n\n{{BRIGHT_RED}}FILES IN QUERY DIR THAT HAVE NO DUPLICATES IN CANONICAL DIR")
+    displaylib.display_message("=" * 80)
+
+    for file_path in session_obj.unique:
+        displaylib.display_message(file_path)
