@@ -1,5 +1,5 @@
-# bvzDeDupe
-A script to help identify and de-duplicate files on disk.
+# compareFolders
+Aa app to help identify and de-duplicate files on disk.
 
 Current usage (STILL IN ALPHA PHASE):
 
@@ -21,7 +21,7 @@ characteristics using the options provided, then the only thing that is consider
 is whether the contents of the files are identical, regardless of the file name,
 date, or location in the directory structure.
 
-Usage: dedupe <query directory> <canonical directory> <-n -p -t -r -c -m -h>
+Usage: compareFolders <query directory> <canonical directory> <-n -p -t -r -c -m -h>
 
 -n    The names of the files must match in order for the files to be considered 
       duplicates.
@@ -42,6 +42,3 @@ Usage: dedupe <query directory> <canonical directory> <-n -p -t -r -c -m -h>
       files to be considered duplicates.
 
 -h    Show this help string and exit.
-
-Note: Each option must have its own hyphen (dash). For example, You may not do this: -nptrcm. 
-      You must do this: -n -p -t -r -c -m.
