@@ -160,6 +160,34 @@ def display_message(*msgs):
 
 
 # ----------------------------------------------------------------------------------------------------------------------
+def format_boolean(value,
+                   colorize=True):
+    """
+    Converts a boolean value into a Yes or No. If colorize is True, then Yes will be returned as green, and no will be
+    returned as red.
+
+    :param value: A boolean either passed as a boolean or as a string.
+    :param colorize: If True, then the returned string will be formatted green for True, or red for False.
+
+    :return: A string containing either "Yes" or "No" depending on the original boolean value.
+    """
+
+    assert type(value) is bool or (type(value) is str and value.upper() in ("TRUE", "FALSE"))
+
+    if str(value).upper() == "TRUE":
+        color = "BRIGHT_GREEN"
+        return_value = "Yes"
+    else:
+        color = "BRIGHT_RED"
+        return_value = "No"
+
+    if colorize:
+        return_value = format_string("{{" + color + "}}" + return_value)
+
+    return return_value
+
+
+# ----------------------------------------------------------------------------------------------------------------------
 def display_refreshable_message(*msgs):
     """
     Given any number of args, converts those args to strings, concatenates them, and prints to stdOut. Then resets the
