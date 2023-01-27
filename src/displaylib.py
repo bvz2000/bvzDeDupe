@@ -33,7 +33,8 @@ def display_progress(count,
                      old_percent,
                      width=50,
                      completed_char="#",
-                     empty_char="."):
+                     empty_char=".",
+                     postpend_str=""):
     """
     Draws and updates ASCII progress bar on the stdout.
 
@@ -45,6 +46,7 @@ def display_progress(count,
            odd number, it will be rounded down to the nearest even value.
     :param completed_char: The character to display for a completed chunk.
     :param empty_char: The character to display for an as-yet uncompleted chunk.
+    :param postpend_str: An arbitrary (and optional) string to append to the end of the progress bar.
 
     :return: The percent value for the current state.
     """
@@ -80,6 +82,9 @@ def display_progress(count,
 
     # append the count string
     progress_bar_str += count_str
+
+    # append the postpend string
+    progress_bar_str += postpend_str
 
     # show it
     sys.stdout.write(progress_bar_str)
