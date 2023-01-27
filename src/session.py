@@ -125,7 +125,8 @@ class Session(object):
                    parent=False,
                    rel_path=False,
                    ctime=False,
-                   mtime=False):
+                   mtime=False,
+                   skip_checksum=False):
         """
         Compare query scan to canonical scan. Any attributes that are set to True will be used as part of the
         comparison. Size is always used as a comparison attribute.
@@ -136,10 +137,15 @@ class Session(object):
         :param rel_path: If True, then also compare on teh relative path. Defaults to False.
         :param ctime: If True, then also compare on the creation time. Defaults to False.
         :param mtime: If True, then also compare on the modification time. Defaults to False.
+        :param skip_checksum: If True, then only compare on the other metrics passed via the arguments. Requires that
+               name is set to True or an assertion error is raised.
 
         :return: A dictionary of matching files where the key is the file in the query directory and the value is a list
                  of files in the canonical directory which match.
         """
+
+        if skip_checksum:
+            assert name is True
 
         count = 0
 
@@ -196,6 +202,15 @@ class Session(object):
                 if file_path == possible_match:  # Do not want to compare a file to itself - that is not a duplicate.
                     continue
 
+                if skip_checksum:
+                    match = True
+                    # TODO: Break this out into a separate function (same as below)
+                    try:
+                        self.actual_matches[file_path].append(possible_match)
+                    except KeyError:
+                        self.actual_matches[file_path] = [possible_match]
+                    continue
+
                 possible_match_checksum = self.canonical_scan.get_checksum(possible_match)
 
                 if possible_match_checksum is not None:
@@ -214,6 +229,7 @@ class Session(object):
                     continue
 
                 if checksum:
+                    # TODO: Break this out into a separate function (same as above)
                     match = True
                     self.canonical_scan.checksum[possible_match] = checksum
                     try:
