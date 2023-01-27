@@ -1,5 +1,6 @@
 #! /usr/bin/env python3
 
+import datetime
 import os.path
 import sys
 import displaylib
@@ -43,10 +44,12 @@ displaylib.display_message("                  Canonical directory:",
                            displaylib.format_string(f"{{BRIGHT_YELLOW}}{os.path.abspath(parser_obj.args.canonical_dir)}"))
 if parser_obj.args.output_file is not None:
     output_file = os.path.abspath(parser_obj.args.output_file)
+    output_file_display = f"{{BRIGHT_YELLOW}}{output_file}"
 else:
     output_file = ""
+    output_file_display = "{{BRIGHT_RED}}NO OUTPUT LOG FILE. QUERY RESULTS WILL ONLY BE DISPLAYED ON SCREEN."
 displaylib.display_message("                           Output log:",
-                           displaylib.format_string(f"{{BRIGHT_YELLOW}}{output_file}"))
+                           displaylib.format_string(output_file_display))
 displaylib.display_message("                 Skip sub-directories:",
                            displaylib.format_boolean(parser_obj.args.skip_sub_dir))
 displaylib.display_message("                    Skip hidden files:",
@@ -68,9 +71,18 @@ displaylib.display_message("Modification date and time must match:",
 displaylib.display_message("                        Skip checksum:",
                            displaylib.format_boolean(parser_obj.args.skip_checksum))
 
+displaylib.display_message("\n\n")
+result = ""
+while result.lower() not in {"yes", "no", "y", "n"}:
+    prompt = displaylib.format_string(f"Do compare? (Yes/No/Quit) (Y/N/Q)")
+    result = input(prompt)
+    if result.lower() in {"quit", "q", "no", "n"}:
+        sys.exit(0)
+
 # ----------------------------------------------------------------------------------------------------------------------
 displaylib.display_message("\n\n{{BRIGHT_GREEN}}QUERY DIRECTORY")
 displaylib.display_message("="*80)
+then = datetime.datetime.now()
 try:
     for counter in session_obj.do_query_scan():
         displaylib.display_refreshable_message(f"Files scanned so far: {counter}")
@@ -88,10 +100,17 @@ displaylib.display_message(f"Number of hidden files skipped: {{BRIGHT_RED}}{sess
 displaylib.display_message(f"Number of files skipped because they were outside of the inclusion regex's: {{BRIGHT_RED}}{session_obj.query_scan.skipped_include}")
 displaylib.display_message(f"Number of files skipped because they matched the exclusion regex's: {{BRIGHT_RED}}{session_obj.query_scan.skipped_exclude}")
 displaylib.display_message(f"Number of files accumulated: {{BRIGHT_RED}}{session_obj.query_scan.initial_count}")
+diff = datetime.datetime.now() - then
+delta = str(datetime.timedelta(seconds=diff.seconds))
+hours = f"{delta.split(':')[0]} hours"
+minutes = f"{delta.split(':')[1]} minutes"
+seconds = f"{delta.split(':')[2]} seconds"
+displaylib.display_message(f"Total scan time: {{BRIGHT_YELLOW}}{hours} {minutes}, {seconds}")
 
 # ----------------------------------------------------------------------------------------------------------------------
 displaylib.display_message("\n\n{{BRIGHT_GREEN}}CANONICAL DIRECTORY")
 displaylib.display_message("="*80)
+then = datetime.datetime.now()
 try:
     for counter in session_obj.do_canonical_scan():
         displaylib.display_refreshable_message(f"Files scanned so far: {counter}")
@@ -109,12 +128,19 @@ displaylib.display_message(f"Number of hidden files skipped: {{BRIGHT_RED}}{sess
 displaylib.display_message(f"Number of files skipped because they were outside of the inclusion regex's: {{BRIGHT_RED}}{session_obj.canonical_scan.skipped_include}")
 displaylib.display_message(f"Number of files skipped because they matched the exclusion regex's: {{BRIGHT_RED}}{session_obj.canonical_scan.skipped_exclude}")
 displaylib.display_message(f"Number of files accumulated: {{BRIGHT_RED}}{session_obj.canonical_scan.initial_count}")
+diff = datetime.datetime.now() - then
+delta = str(datetime.timedelta(seconds=diff.seconds))
+hours = f"{delta.split(':')[0]} hours"
+minutes = f"{delta.split(':')[1]} minutes"
+seconds = f"{delta.split(':')[2]} seconds"
+displaylib.display_message(f"Total scan time: {{BRIGHT_YELLOW}}{hours} {minutes}, {seconds}")
 
 # ----------------------------------------------------------------------------------------------------------------------
 displaylib.display_message("\n\n{{BRIGHT_YELLOW}}COMPARING FILES:")
 displaylib.display_message("="*80)
 
 old_percent = 0
+then = datetime.datetime.now()
 for count in session_obj.do_compare(name=parser_obj.args.match_on_name,
                                     file_type=parser_obj.args.match_on_type,
                                     parent=parser_obj.args.match_on_parent,
@@ -147,6 +173,12 @@ displaylib.display_message(f"Number of query files that are duplicates of canoni
 displaylib.display_message(f"Number of query files that have no duplicates in canonical dir: {num_unique}")
 if not parser_obj.args.skip_checksum:
     displaylib.display_message(f"Number of times a checksum was reused: {num_reused_checksum}")
+diff = datetime.datetime.now() - then
+delta = str(datetime.timedelta(seconds=diff.seconds))
+hours = f"{delta.split(':')[0]} hours"
+minutes = f"{delta.split(':')[1]} minutes"
+seconds = f"{delta.split(':')[2]} seconds"
+displaylib.display_message(f"Total compare time: {{BRIGHT_YELLOW}}{hours} {minutes}, {seconds}")
 
 if parser_obj.args.output_file:
     with open(parser_obj.args.output_file, "w") as f:
