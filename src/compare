@@ -38,11 +38,15 @@ session_obj = Session(query_dir=parser_obj.args.query_dir,
 displaylib.display_message("\n\n{{BRIGHT_GREEN}}SUMMARY")
 displaylib.display_message("="*80)
 displaylib.display_message("                      Query directory:",
-                           "{{BRIGHT_YELLOW}}",
-                           os.path.abspath(parser_obj.args.query_dir))
+                           displaylib.format_string(f"{{BRIGHT_YELLOW}}{os.path.abspath(parser_obj.args.query_dir)}"))
 displaylib.display_message("                  Canonical directory:",
-                           "{{BRIGHT_YELLOW}}",
-                           os.path.abspath(parser_obj.args.canonical_dir))
+                           displaylib.format_string(f"{{BRIGHT_YELLOW}}{os.path.abspath(parser_obj.args.canonical_dir)}"))
+if parser_obj.args.output_file is not None:
+    output_file = os.path.abspath(parser_obj.args.output_file)
+else:
+    output_file = ""
+displaylib.display_message("                           Output log:",
+                           displaylib.format_string(f"{{BRIGHT_YELLOW}}{output_file}"))
 displaylib.display_message("                 Skip sub-directories:",
                            displaylib.format_boolean(parser_obj.args.skip_sub_dir))
 displaylib.display_message("                    Skip hidden files:",
@@ -115,9 +119,15 @@ for count in session_obj.do_compare(name=parser_obj.args.match_on_name,
                                     rel_path=parser_obj.args.match_on_relpath,
                                     ctime=parser_obj.args.match_on_ctime,
                                     mtime=parser_obj.args.match_on_mtime):
+    dupes_str = f"{{BRIGHT_RED}}D:{{COLOR_NONE}} {len(session_obj.actual_matches.keys())}"
+    unique_str = f"{{BRIGHT_RED}}U:{{COLOR_NONE}} {len(session_obj.unique)}"
+    error_str = f"{{BRIGHT_RED}}E:{{COLOR_NONE}} {len(session_obj.source_error_files)}"
+    postpend_str = displaylib.format_string(f"  {dupes_str} {unique_str} {error_str}")
     old_percent = displaylib.display_progress(count=count,
                                               total=len(session_obj.query_scan.files),
-                                              old_percent=old_percent)
+                                              old_percent=old_percent,
+                                              width=44,
+                                              postpend_str=postpend_str)
 displaylib.display_message("\n")
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -133,6 +143,31 @@ displaylib.display_message(f"Number of files checked: {num_files_checked}")
 displaylib.display_message(f"Number of query files that are duplicates of canonical files: {num_duplicates}")
 displaylib.display_message(f"Number of query files that have no duplicates in canonical dir: {num_unique}")
 displaylib.display_message(f"Number of times a checksum was reused: {num_reused_checksum}")
+
+if parser_obj.args.output_file:
+    with open(parser_obj.args.output_file, "w") as f:
+        for file_path, matches in session_obj.actual_matches.items():
+            output = list()
+            output.append("D")
+            output.append(file_path)
+            for match in matches:
+                output.append(match)
+            f.write(f"{','.join(output)}\n")
+        for file_path in session_obj.unique:
+            output = list()
+            output.append("U")
+            output.append(file_path)
+            f.write(f"{','.join(output)}\n")
+        for file_path in session_obj.source_error_files:
+            output = list()
+            output.append("SE")
+            output.append(file_path)
+            f.write(f"{','.join(output)}\n")
+        for file_path in session_obj.possible_match_error_files:
+            output = list()
+            output.append("PME")
+            output.append(file_path)
+            f.write(f"{','.join(output)}\n")
 
 result = ""
 displaylib.display_message("\n\n")
