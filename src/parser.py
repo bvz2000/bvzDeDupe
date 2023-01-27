@@ -2,8 +2,11 @@
 """
 A module to manage command line parsing.
 """
-import os.path
 from argparse import ArgumentParser
+import os.path
+import sys
+
+import displaylib
 
 help_msg = f"""
 A program to compare all of the files in a query directory to the files in a
@@ -54,6 +57,16 @@ class Parser(object):
         self.parser.add_argument('canonical_dir',
                                  metavar='canonical directory',
                                  type=str,
+                                 help=help_str)
+
+        help_str = "If provided, the results of the comparison operation will be written to this file on disk as a " \
+                   "comma separated text file. If the file already exists, you will be prompted as to whether you " \
+                   "wish to overwrite it."
+        self.parser.add_argument("-o",
+                                 dest="output_file",
+                                 type=str,
+                                 action="store",
+                                 default=None,
                                  help=help_str)
 
         help_str = "The names of the files must match in order for the files to be considered duplicates."
@@ -214,3 +227,18 @@ class Parser(object):
 
             if os.path.exists(self.args.config_path):
                 raise FileExistsError(f"Config file already exists: {self.args.config_path} ")
+
+        if self.args.output_file is not None:
+
+            if os.path.exists(self.args.output_file):
+                yes = "{{BRIGHT_YELLOW}}Y{{COLOR_NONE}}es"
+                no = "{{BRIGHT_YELLOW}}N{{COLOR_NONE}}o"
+                quitapp = "{{BRIGHT_YELLOW}}Q{{COLOR_NONE}}uit"
+                prompt = f"\n\nOutput file ({self.args.output_file}) already exists. Overwrite? ({yes}/{no}/{quitapp} "
+                prompt = displaylib.format_string(prompt)
+                result = input(prompt)
+                if result.lower() in {"quit", "q", "no", "n"}:
+                    sys.exit(0)
+
+            if not os.path.isdir(os.path.split(self.args.output_file)[0]):
+                raise NotADirectoryError(f"{self.args.output_file} is not a valid path")
