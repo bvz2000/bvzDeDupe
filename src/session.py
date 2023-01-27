@@ -1,4 +1,5 @@
 #! /usr/bin/env python3
+import os.path
 
 from canonicaldir import CanonicalDir
 from querydir import QueryDir
@@ -60,6 +61,9 @@ class Session(object):
 
         self.actual_matches = dict()
         self.unique = set()
+
+        self.source_error_files = set()
+        self.possible_match_error_files = set()
 
         self.pre_computed_checksum_count = 0
 
@@ -197,10 +201,17 @@ class Session(object):
                 if possible_match_checksum is not None:
                     self.pre_computed_checksum_count += 1
 
-                checksum = comparefiles.compare(file_a_path=file_path,
-                                                file_b_path=possible_match,
-                                                file_b_checksum=possible_match_checksum,
-                                                single_pass=True)
+                try:
+                    checksum = comparefiles.compare(file_a_path=file_path,
+                                                    file_b_path=possible_match,
+                                                    file_b_checksum=possible_match_checksum,
+                                                    single_pass=True)
+                except AssertionError:
+                    if not os.path.exists(file_path):
+                        self.source_error_files.add(file_path)
+                    if not os.path.exists(possible_match):
+                        self.possible_match_error_files.add(possible_match)
+                    continue
 
                 if checksum:
                     match = True
