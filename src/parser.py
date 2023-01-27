@@ -69,7 +69,9 @@ class Parser(object):
                                  default=None,
                                  help=help_str)
 
-        help_str = "The names of the files must match in order for the files to be considered duplicates."
+        help_str = "The names of the files must match in order for the files to be considered duplicates. The use of "\
+                   "this option automatically disables the -t (match on type) options since that would be a redundant "\
+                   "check."
         self.parser.add_argument("-n",
                                  dest="match_on_name",
                                  action="store_true",
@@ -89,7 +91,9 @@ class Parser(object):
                                  action="store_true",
                                  help=help_str)
 
-        help_str = "The full relative paths of the files must match in order for the files to be considered duplicates."
+        help_str = "The full relative paths of the files must match in order for the files to be considered " \
+                   "duplicates. The use of this option automatically disables the -p (match on parent) options since " \
+                   "that would a redundant check."
         self.parser.add_argument("-r",
                                  dest="match_on_relpath",
                                  action="store_true",
@@ -106,6 +110,14 @@ class Parser(object):
                    "duplicates."
         self.parser.add_argument("-m",
                                  dest="match_on_mtime",
+                                 action="store_true",
+                                 help=help_str)
+
+        help_str = "Skip the checksum and only compare on the name, file size, and any other (optional) metrics " \
+                   "listed above. Note: using this option automatically also enables the -n (match on name)" \
+                   "option."
+        self.parser.add_argument("-S",
+                                 dest="skip_checksum",
                                  action="store_true",
                                  help=help_str)
 
@@ -207,6 +219,15 @@ class Parser(object):
 
         :return: Nothing.
         """
+
+        if self.args.skip_checksum:
+            self.args.match_on_name = True
+
+        if self.args.match_on_relpath:
+            self.args.match_on_parent = False
+
+        if self.args.match_on_name:
+            self.args.match_on_type = False
 
         if self.args.config_paths:
             for path in self.args.config_path:
