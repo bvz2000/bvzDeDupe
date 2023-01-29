@@ -25,6 +25,8 @@ BRIGHT_MAGENTA = '\033[95m'
 BRIGHT_CYAN = '\033[96m'
 BRIGHT_WHITE = '\033[97m'
 ENDC = '\033[0m'
+BG_RED = "\u001b[41m"
+BLINK = "\033[5m"
 
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -142,6 +144,8 @@ def format_string(msg):
             BRIGHT_CYAN=BRIGHT_CYAN,
             BRIGHT_WHITE=BRIGHT_WHITE,
             COLOR_NONE=ENDC,
+            BG_RED=BG_RED,
+            BLINK=BLINK,
         )
     except KeyError:
         pass

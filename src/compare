@@ -8,229 +8,316 @@ import displaylib
 import parser
 from session import Session
 
-parser_obj = parser.Parser(sys.argv[1:])
-try:
-    parser_obj.validate()
-except (FileNotFoundError, NotADirectoryError, PermissionError) as e:
-    msg = f"{{RED}}Error:{{COLOR_NONE}} {e}"
-    displaylib.display_message(msg)
-    sys.exit(1)
-except FileExistsError as e:
-    msg= f"{{YELLOW}}Warning:{{COLOR_NONE}} {e}"
-    displaylib.display_message(msg)
+
+# ----------------------------------------------------------------------------------------------------------------------
+def display_errors(scan_obj,
+                   scan_type_name):
+    """
+    Displays the errors that have occurred during scans.
+
+    :param scan_obj: The scan object that incurred the errors.
+    :param scan_type_name:  The name of the scan directory. Should be either "canonical" or "query"
+
+    :return: Nothing.
+    """
+
     result = ""
-    while result.upper() not in "YN":
-        displaylib.display_message("Overwrite file? (Y/N)")
-    if result.upper() != "Y":
-        sys.exit(0)
+    displaylib.display_message("\n\n")
+    while result.lower() not in {"list", "l", "quit", "q"}:
+        msg = f"There have been errors scanning the {scan_type_name} directory. The compare operation cannot be "
+        msg += "run until these errors have been addressed."
+        msg = f"{{BRIGHT_RED}}{msg}\n{{COLOR_NONE}}Do you want to list the errors now? Or just quit? (L/Q)"
+        prompt = displaylib.format_string(msg)
+        result = input(prompt)
+        if result.lower() in {"list", "l"}:
 
-session_obj = Session(query_dir=parser_obj.args.query_dir,
-                      canonical_dir=parser_obj.args.canonical_dir,
-                      skip_sub_dir=parser_obj.args.skip_sub_dir,
-                      skip_hidden=not parser_obj.args.include_hidden,
-                      skip_zero_len=not parser_obj.args.include_zero_length,
-                      incl_dir_regex=parser_obj.args.incl_dir_regexes,
-                      excl_dir_regex=parser_obj.args.excl_dir_regexes,
-                      incl_file_regex=parser_obj.args.incl_file_regexes,
-                      excl_file_regex=parser_obj.args.excl_file_regexes,
-                      report_frequency=10)
+            count = len(scan_obj.dir_permission_err_files)
+            displaylib.display_message("\n\n")
+            msg = f"{{BRIGHT_YELLOW}}DIRECTORIES WITH PERMISSION ERRORS:{{COLOR_NONE}}"
+            msg += f"  ({{BRIGHT_RED}}{count}{{COLOR_NONE}} Errors)"
+            displaylib.display_message(msg)
+            displaylib.display_message("=" * 80)
+            for err_file in scan_obj.dir_permission_err_files:
+                displaylib.display_message(err_file)
 
-# ----------------------------------------------------------------------------------------------------------------------
-displaylib.display_message("\n\n{{BRIGHT_GREEN}}SUMMARY")
-displaylib.display_message("="*80)
-displaylib.display_message("                      Query directory:",
-                           displaylib.format_string(f"{{BRIGHT_YELLOW}}{os.path.abspath(parser_obj.args.query_dir)}"))
-displaylib.display_message("                  Canonical directory:",
-                           displaylib.format_string(f"{{BRIGHT_YELLOW}}{os.path.abspath(parser_obj.args.canonical_dir)}"))
-if parser_obj.args.output_file is not None:
-    output_file = os.path.abspath(parser_obj.args.output_file)
-    output_file_display = f"{{BRIGHT_YELLOW}}{output_file}"
-else:
-    output_file = ""
-    output_file_display = "{{BRIGHT_RED}}NO OUTPUT LOG FILE. QUERY RESULTS WILL ONLY BE DISPLAYED ON SCREEN."
-displaylib.display_message("                           Output log:",
-                           displaylib.format_string(output_file_display))
-displaylib.display_message("                 Skip sub-directories:",
-                           displaylib.format_boolean(parser_obj.args.skip_sub_dir))
-displaylib.display_message("                    Skip hidden files:",
-                           displaylib.format_boolean(not parser_obj.args.include_hidden))
-displaylib.display_message("               Skip zero length files:",
-                           displaylib.format_boolean(not parser_obj.args.include_zero_length))
-displaylib.display_message("                     Names must match:",
-                           displaylib.format_boolean(parser_obj.args.match_on_name))
-displaylib.display_message("           File extensions must match:",
-                           displaylib.format_boolean(parser_obj.args.match_on_type))
-displaylib.display_message("     Parent directory name must match:",
-                           displaylib.format_boolean(parser_obj.args.match_on_parent))
-displaylib.display_message("            Relative paths must match:",
-                           displaylib.format_boolean(parser_obj.args.match_on_relpath))
-displaylib.display_message("    Creation date and time must match:",
-                           displaylib.format_boolean(parser_obj.args.match_on_ctime))
-displaylib.display_message("Modification date and time must match:",
-                           displaylib.format_boolean(parser_obj.args.match_on_mtime))
-displaylib.display_message("                        Skip checksum:",
-                           displaylib.format_boolean(parser_obj.args.skip_checksum))
+            count = len(scan_obj.dir_permission_err_files)
+            displaylib.display_message("\n\n")
+            msg = f"{{BRIGHT_YELLOW}}DIRECTORIES WITH UNDEFINED ERRORS:{{COLOR_NONE}}"
+            msg += f"  ({{BRIGHT_RED}}{count}{{COLOR_NONE}} Errors)"
+            displaylib.display_message(msg)
+            displaylib.display_message("=" * 80)
+            for err_file in scan_obj.dir_generic_err_files:
+                displaylib.display_message(err_file)
 
-displaylib.display_message("\n\n")
-result = ""
-while result.lower() not in {"yes", "no", "y", "n"}:
-    prompt = displaylib.format_string(f"Do compare? (Yes/No/Quit) (Y/N/Q)")
-    result = input(prompt)
-    if result.lower() in {"quit", "q", "no", "n"}:
-        sys.exit(0)
+            count = len(scan_obj.file_permission_err_files)
+            displaylib.display_message("\n\n")
+            msg = f"{{BRIGHT_YELLOW}}FILES WITH PERMISSION ERRORS:{{COLOR_NONE}}"
+            msg += f"  ({{BRIGHT_RED}}{count}{{COLOR_NONE}} Errors)"
+            displaylib.display_message(msg)
+            displaylib.display_message("=" * 80)
+            for err_file in scan_obj.file_permission_err_files:
+                displaylib.display_message(err_file)
+
+            count = len(scan_obj.file_permission_err_files)
+            displaylib.display_message("\n\n")
+            msg = f"{{BRIGHT_YELLOW}}FILES WITH UNDEFINED ERRORS:{{COLOR_NONE}}"
+            msg += f"  ({{BRIGHT_RED}}{count}{{COLOR_NONE}} Errors)"
+            displaylib.display_message(msg)
+            displaylib.display_message("=" * 80)
+            for err_file in scan_obj.file_generic_err_files:
+                displaylib.display_message(err_file)
+
+            count = len(scan_obj.file_not_found_err_files)
+            displaylib.display_message("\n\n")
+            msg = f"{{BRIGHT_YELLOW}}FILES WITH FILE NOT FOUND ERRORS:{{COLOR_NONE}}"
+            msg += f"  ({{BRIGHT_RED}}{count}{{COLOR_NONE}} Errors)"
+            displaylib.display_message(msg)
+            displaylib.display_message("=" * 80)
+            for err_file in scan_obj.file_not_found_err_files:
+                displaylib.display_message(err_file)
+
+    sys.exit(0)
+
 
 # ----------------------------------------------------------------------------------------------------------------------
-displaylib.display_message("\n\n{{BRIGHT_GREEN}}QUERY DIRECTORY")
-displaylib.display_message("="*80)
-then = datetime.datetime.now()
-try:
-    for counter in session_obj.do_query_scan():
-        displaylib.display_refreshable_message(f"Files scanned so far: {counter}")
-except IOError as e:
-    displaylib.display_message(f"{{BRIGHT_RED}}ERROR:{{COLOR_NONE}} {str(e)}")
-    sys.exit(1)
-displaylib.display_refreshable_message(" "*80)
-displaylib.finish_refreshable_message()
+def display_scan_results(scan_obj,
+                         start_time):
+    """
+    Displays the scan results.
 
-displaylib.display_message(f"Number of files scanned: {{BRIGHT_RED}}{session_obj.query_scan.checked_count}")
-displaylib.display_message(f"Number of error files: {{BRIGHT_RED}}{session_obj.query_scan.error_count}")
-displaylib.display_message(f"Number of links skipped: {{BRIGHT_RED}}{session_obj.query_scan.skipped_links}")
-displaylib.display_message(f"Number of zero length files skipped: {{BRIGHT_RED}}{session_obj.query_scan.skipped_zero_len}")
-displaylib.display_message(f"Number of hidden files skipped: {{BRIGHT_RED}}{session_obj.query_scan.skipped_hidden}")
-displaylib.display_message(f"Number of files skipped because they were outside of the inclusion regex's: {{BRIGHT_RED}}{session_obj.query_scan.skipped_include}")
-displaylib.display_message(f"Number of files skipped because they matched the exclusion regex's: {{BRIGHT_RED}}{session_obj.query_scan.skipped_exclude}")
-displaylib.display_message(f"Number of files accumulated: {{BRIGHT_RED}}{session_obj.query_scan.initial_count}")
-diff = datetime.datetime.now() - then
-delta = str(datetime.timedelta(seconds=diff.seconds))
-hours = f"{delta.split(':')[0]} hours"
-minutes = f"{delta.split(':')[1]} minutes"
-seconds = f"{delta.split(':')[2]} seconds"
-displaylib.display_message(f"Total scan time: {{BRIGHT_YELLOW}}{hours} {minutes}, {seconds}")
+    :param scan_obj: The scan object that incurred the errors.
+    :param start_time: The date-time object that holds the scan start time.
 
-# ----------------------------------------------------------------------------------------------------------------------
-displaylib.display_message("\n\n{{BRIGHT_GREEN}}CANONICAL DIRECTORY")
-displaylib.display_message("="*80)
-then = datetime.datetime.now()
-try:
-    for counter in session_obj.do_canonical_scan():
-        displaylib.display_refreshable_message(f"Files scanned so far: {counter}")
-except IOError as e:
-    displaylib.display_message(f"{{BRIGHT_RED}}ERROR:{{COLOR_NONE}} {str(e)}")
-    sys.exit(1)
-displaylib.display_refreshable_message(" "*80)
-displaylib.finish_refreshable_message()
+    :return: Nothing.
+    """
 
-displaylib.display_message(f"Number of files scanned: {{BRIGHT_RED}}{session_obj.canonical_scan.checked_count}")
-displaylib.display_message(f"Number of error files: {{BRIGHT_RED}}{session_obj.canonical_scan.error_count}")
-displaylib.display_message(f"Number of links skipped: {{BRIGHT_RED}}{session_obj.canonical_scan.skipped_links}")
-displaylib.display_message(f"Number of zero length files skipped: {{BRIGHT_RED}}{session_obj.canonical_scan.skipped_zero_len}")
-displaylib.display_message(f"Number of hidden files skipped: {{BRIGHT_RED}}{session_obj.canonical_scan.skipped_hidden}")
-displaylib.display_message(f"Number of files skipped because they were outside of the inclusion regex's: {{BRIGHT_RED}}{session_obj.canonical_scan.skipped_include}")
-displaylib.display_message(f"Number of files skipped because they matched the exclusion regex's: {{BRIGHT_RED}}{session_obj.canonical_scan.skipped_exclude}")
-displaylib.display_message(f"Number of files accumulated: {{BRIGHT_RED}}{session_obj.canonical_scan.initial_count}")
-diff = datetime.datetime.now() - then
-delta = str(datetime.timedelta(seconds=diff.seconds))
-hours = f"{delta.split(':')[0]} hours"
-minutes = f"{delta.split(':')[1]} minutes"
-seconds = f"{delta.split(':')[2]} seconds"
-displaylib.display_message(f"Total scan time: {{BRIGHT_YELLOW}}{hours} {minutes}, {seconds}")
+    displaylib.display_message(f"Number of files scanned: {{BRIGHT_RED}}{scan_obj.checked_count}")
+    if scan_obj.error_count == 0:
+        displaylib.display_message(f"Number of errors: {{BRIGHT_RED}}{scan_obj.error_count}")
+    else:
+        displaylib.display_message(f"Number of errors: {{BG_RED}}{{BLINK}}{scan_obj.error_count}")
+    displaylib.display_message(f"Number of links skipped: {{BRIGHT_RED}}{scan_obj.skipped_links}")
+    displaylib.display_message(f"Number of zero length files skipped: {{BRIGHT_RED}}{scan_obj.skipped_zero_len}")
+    displaylib.display_message(f"Number of hidden files skipped: {{BRIGHT_RED}}{scan_obj.skipped_hidden}")
+    displaylib.display_message(f"Number of files skipped because they were outside of the inclusion regex's: {{BRIGHT_RED}}{scan_obj.skipped_include}")
+    displaylib.display_message(f"Number of files skipped because they matched the exclusion regex's: {{BRIGHT_RED}}{scan_obj.skipped_exclude}")
+    displaylib.display_message(f"Number of files accumulated: {{BRIGHT_RED}}{scan_obj.initial_count}")
+    diff = datetime.datetime.now() - start_time
+    delta = str(datetime.timedelta(seconds=diff.seconds))
+    hours = f"{delta.split(':')[0]} hours"
+    minutes = f"{delta.split(':')[1]} minutes"
+    seconds = f"{delta.split(':')[2]} seconds"
+    displaylib.display_message(f"Total scan time: {{BRIGHT_YELLOW}}{hours} {minutes}, {seconds}")
+
 
 # ----------------------------------------------------------------------------------------------------------------------
-displaylib.display_message("\n\n{{BRIGHT_YELLOW}}COMPARING FILES:")
-displaylib.display_message("="*80)
+def main():
+    parser_obj = parser.Parser(sys.argv[1:])
+    try:
+        parser_obj.validate()
+    except (FileNotFoundError, NotADirectoryError, PermissionError) as e:
+        msg = f"{{RED}}Error:{{COLOR_NONE}} {e}"
+        displaylib.display_message(msg)
+        sys.exit(1)
+    except FileExistsError as e:
+        msg= f"{{YELLOW}}Warning:{{COLOR_NONE}} {e}"
+        displaylib.display_message(msg)
+        result = ""
+        while result.upper() not in "YN":
+            displaylib.display_message("Overwrite file? (Y/N)")
+        if result.upper() != "Y":
+            sys.exit(0)
 
-old_percent = 0
-then = datetime.datetime.now()
-for count in session_obj.do_compare(name=parser_obj.args.match_on_name,
-                                    file_type=parser_obj.args.match_on_type,
-                                    parent=parser_obj.args.match_on_parent,
-                                    rel_path=parser_obj.args.match_on_relpath,
-                                    ctime=parser_obj.args.match_on_ctime,
-                                    mtime=parser_obj.args.match_on_mtime,
-                                    skip_checksum=parser_obj.args.skip_checksum):
-    dupes_str = f"{{BRIGHT_RED}}D:{{COLOR_NONE}} {len(session_obj.actual_matches.keys())}"
-    unique_str = f"{{BRIGHT_RED}}U:{{COLOR_NONE}} {len(session_obj.unique)}"
-    error_str = f"{{BRIGHT_RED}}E:{{COLOR_NONE}} {len(session_obj.source_error_files)}"
-    postpend_str = displaylib.format_string(f"  {dupes_str} {unique_str} {error_str}")
-    old_percent = displaylib.display_progress(count=count,
-                                              total=len(session_obj.query_scan.files),
-                                              old_percent=old_percent,
-                                              width=44,
-                                              postpend_str=postpend_str)
-displaylib.display_message("\n")
+    session_obj = Session(query_dir=parser_obj.args.query_dir,
+                          canonical_dir=parser_obj.args.canonical_dir,
+                          skip_sub_dir=parser_obj.args.skip_sub_dir,
+                          skip_hidden=not parser_obj.args.include_hidden,
+                          skip_zero_len=not parser_obj.args.include_zero_length,
+                          incl_dir_regex=parser_obj.args.incl_dir_regexes,
+                          excl_dir_regex=parser_obj.args.excl_dir_regexes,
+                          incl_file_regex=parser_obj.args.incl_file_regexes,
+                          excl_file_regex=parser_obj.args.excl_file_regexes,
+                          report_frequency=10)
 
-# ----------------------------------------------------------------------------------------------------------------------
-displaylib.display_message("\n\n{{BRIGHT_GREEN}}RESULTS:")
-displaylib.display_message("="*80)
+    # ----------------------------------------------------------------------------------------------------------------------
+    displaylib.display_message("\n\n{{BRIGHT_GREEN}}SUMMARY")
+    displaylib.display_message("="*80)
+    displaylib.display_message("                      Query directory:",
+                               displaylib.format_string(f"{{BRIGHT_YELLOW}}{os.path.abspath(parser_obj.args.query_dir)}"))
+    displaylib.display_message("                  Canonical directory:",
+                               displaylib.format_string(f"{{BRIGHT_YELLOW}}{os.path.abspath(parser_obj.args.canonical_dir)}"))
+    if parser_obj.args.output_file is not None:
+        output_file = os.path.abspath(parser_obj.args.output_file)
+        output_file_display = f"{{BRIGHT_YELLOW}}{output_file}"
+    else:
+        output_file = ""
+        output_file_display = "{{BRIGHT_RED}}NO OUTPUT LOG FILE. QUERY RESULTS WILL ONLY BE DISPLAYED ON SCREEN."
+    displaylib.display_message("                           Output log:",
+                               displaylib.format_string(output_file_display))
+    displaylib.display_message("                 Skip sub-directories:",
+                               displaylib.format_boolean(parser_obj.args.skip_sub_dir))
+    displaylib.display_message("                    Skip hidden files:",
+                               displaylib.format_boolean(not parser_obj.args.include_hidden))
+    displaylib.display_message("               Skip zero length files:",
+                               displaylib.format_boolean(not parser_obj.args.include_zero_length))
+    displaylib.display_message("                     Names must match:",
+                               displaylib.format_boolean(parser_obj.args.match_on_name))
+    displaylib.display_message("           File extensions must match:",
+                               displaylib.format_boolean(parser_obj.args.match_on_type))
+    displaylib.display_message("     Parent directory name must match:",
+                               displaylib.format_boolean(parser_obj.args.match_on_parent))
+    displaylib.display_message("            Relative paths must match:",
+                               displaylib.format_boolean(parser_obj.args.match_on_relpath))
+    displaylib.display_message("    Creation date and time must match:",
+                               displaylib.format_boolean(parser_obj.args.match_on_ctime))
+    displaylib.display_message("Modification date and time must match:",
+                               displaylib.format_boolean(parser_obj.args.match_on_mtime))
+    displaylib.display_message("                        Skip checksum:",
+                               displaylib.format_boolean(parser_obj.args.skip_checksum))
 
-num_files_checked = f"{{BRIGHT_RED}}{len(session_obj.query_scan.files)}"
-num_duplicates = f"{{BRIGHT_RED}}{len(session_obj.actual_matches)}"
-num_unique = f"{{BRIGHT_RED}}{len(session_obj.unique)}"
-num_reused_checksum = f"{{BRIGHT_RED}}{session_obj.pre_computed_checksum_count}"
+    displaylib.display_message("\n\n")
+    result = ""
+    while result.lower() not in {"yes", "no", "y", "n"}:
+        prompt = displaylib.format_string(f"Do compare? (Yes/No/Quit) (Y/N/Q)")
+        result = input(prompt)
+        if result.lower() in {"quit", "q", "no", "n"}:
+            sys.exit(0)
 
-displaylib.display_message(f"Number of files checked: {num_files_checked}")
-displaylib.display_message(f"Number of query files that are duplicates of canonical files: {num_duplicates}")
-displaylib.display_message(f"Number of query files that have no duplicates in canonical dir: {num_unique}")
-if not parser_obj.args.skip_checksum:
-    displaylib.display_message(f"Number of times a checksum was reused: {num_reused_checksum}")
-diff = datetime.datetime.now() - then
-delta = str(datetime.timedelta(seconds=diff.seconds))
-hours = f"{delta.split(':')[0]} hours"
-minutes = f"{delta.split(':')[1]} minutes"
-seconds = f"{delta.split(':')[2]} seconds"
-displaylib.display_message(f"Total compare time: {{BRIGHT_YELLOW}}{hours} {minutes}, {seconds}")
+    # ----------------------------------------------------------------------------------------------------------------------
+    displaylib.display_message("\n\n{{BRIGHT_GREEN}}QUERY DIRECTORY")
+    displaylib.display_message("="*80)
+    then = datetime.datetime.now()
+    try:
+        for counter in session_obj.do_query_scan():
+            displaylib.display_refreshable_message(f"Files scanned so far: {counter}")
+    except IOError as e:
+        displaylib.display_message(f"{{BRIGHT_RED}}ERROR:{{COLOR_NONE}} {str(e)}")
+        sys.exit(1)
+    displaylib.display_refreshable_message(" "*80)
+    displaylib.finish_refreshable_message()
 
-if parser_obj.args.output_file:
-    with open(parser_obj.args.output_file, "w") as f:
-        for file_path, matches in session_obj.actual_matches.items():
-            output = list()
-            output.append("D")
-            output.append(file_path)
-            for match in matches:
-                output.append(match)
-            f.write(f"{','.join(output)}\n")
-        for file_path in session_obj.unique:
-            output = list()
-            output.append("U")
-            output.append(file_path)
-            f.write(f"{','.join(output)}\n")
-        for file_path in session_obj.source_error_files:
-            output = list()
-            output.append("SE")
-            output.append(file_path)
-            f.write(f"{','.join(output)}\n")
-        for file_path in session_obj.possible_match_error_files:
-            output = list()
-            output.append("PME")
-            output.append(file_path)
-            f.write(f"{','.join(output)}\n")
+    display_scan_results(session_obj.query_scan, then)
 
-result = ""
-displaylib.display_message("\n\n")
-while result.lower() not in {"matching", "m", "unique", "u", "both", "b", "quit", "q"}:
-    matching = "{{BRIGHT_YELLOW}}M{{COLOR_NONE}}atching files"
-    unique = "{{BRIGHT_YELLOW}}U{{COLOR_NONE}}nique files"
-    both = "{{BRIGHT_YELLOW}}B{{COLOR_NONE}}oth"
-    quitapp = "{{BRIGHT_YELLOW}}Q{{COLOR_NONE}}uit"
-    prompt = displaylib.format_string(f"Display the {matching}, {unique}, {both}, or {quitapp}? (M/U/B/Q)")
-    result = input(prompt)
-    if result.lower() in {"quit", "q"}:
-        sys.exit(0)
+    if session_obj.query_scan.error_count > 0:
+        display_errors(session_obj.query_scan, "query")
 
-# ----------------------------------------------------------------------------------------------------------------------
-if result.lower() in {"matching", "m", "both", "b"}:
-    displaylib.display_message("\n\n{{BRIGHT_GREEN}}MATCHES")
+    # ----------------------------------------------------------------------------------------------------------------------
+    displaylib.display_message("\n\n{{BRIGHT_GREEN}}CANONICAL DIRECTORY")
+    displaylib.display_message("="*80)
+    then = datetime.datetime.now()
+    try:
+        for counter in session_obj.do_canonical_scan():
+            displaylib.display_refreshable_message(f"Files scanned so far: {counter}")
+    except IOError as e:
+        displaylib.display_message(f"{{BRIGHT_RED}}ERROR:{{COLOR_NONE}} {str(e)}")
+        sys.exit(1)
+    displaylib.display_refreshable_message(" "*80)
+    displaylib.finish_refreshable_message()
+
+    display_scan_results(session_obj.canonical_scan, then)
+
+    if session_obj.canonical_scan.error_count > 0:
+        display_errors(session_obj.canonical_scan, "canonical")
+
+    # ----------------------------------------------------------------------------------------------------------------------
+    displaylib.display_message("\n\n{{BRIGHT_YELLOW}}COMPARING FILES:")
     displaylib.display_message("="*80)
 
-    for file_path, matches in session_obj.actual_matches.items():
-        displaylib.display_message(file_path)
-        for match in matches:
-            displaylib.display_message(f"{{BRIGHT_CYAN}}{match}")
-        displaylib.display_message("\n\n")
+    old_percent = 0
+    then = datetime.datetime.now()
+    for count in session_obj.do_compare(name=parser_obj.args.match_on_name,
+                                        file_type=parser_obj.args.match_on_type,
+                                        parent=parser_obj.args.match_on_parent,
+                                        rel_path=parser_obj.args.match_on_relpath,
+                                        ctime=parser_obj.args.match_on_ctime,
+                                        mtime=parser_obj.args.match_on_mtime,
+                                        skip_checksum=parser_obj.args.skip_checksum):
+        dupes_str = f"{{BRIGHT_RED}}D:{{COLOR_NONE}} {len(session_obj.actual_matches.keys())}"
+        unique_str = f"{{BRIGHT_RED}}U:{{COLOR_NONE}} {len(session_obj.unique)}"
+        error_str = f"{{BRIGHT_RED}}E:{{COLOR_NONE}} {len(session_obj.source_error_files)}"
+        postpend_str = displaylib.format_string(f"  {dupes_str} {unique_str} {error_str}")
+        old_percent = displaylib.display_progress(count=count,
+                                                  total=len(session_obj.query_scan.files),
+                                                  old_percent=old_percent,
+                                                  width=44,
+                                                  postpend_str=postpend_str)
+    displaylib.display_message("\n")
 
-if result.lower() in {"unique", "u", "both", "b"}:
-    displaylib.display_message("\n\n{{BRIGHT_RED}}FILES IN QUERY DIR THAT HAVE NO DUPLICATES IN CANONICAL DIR")
-    displaylib.display_message("=" * 80)
+    # ----------------------------------------------------------------------------------------------------------------------
+    displaylib.display_message("\n\n{{BRIGHT_GREEN}}RESULTS:")
+    displaylib.display_message("="*80)
 
-    for file_path in session_obj.unique:
-        displaylib.display_message(file_path)
+    num_files_checked = f"{{BRIGHT_RED}}{len(session_obj.query_scan.files)}"
+    num_duplicates = f"{{BRIGHT_RED}}{len(session_obj.actual_matches)}"
+    num_unique = f"{{BRIGHT_RED}}{len(session_obj.unique)}"
+    num_reused_checksum = f"{{BRIGHT_RED}}{session_obj.pre_computed_checksum_count}"
+
+    displaylib.display_message(f"Number of files checked: {num_files_checked}")
+    displaylib.display_message(f"Number of query files that are duplicates of canonical files: {num_duplicates}")
+    displaylib.display_message(f"Number of query files that have no duplicates in canonical dir: {num_unique}")
+    if not parser_obj.args.skip_checksum:
+        displaylib.display_message(f"Number of times a checksum was reused: {num_reused_checksum}")
+    diff = datetime.datetime.now() - then
+    delta = str(datetime.timedelta(seconds=diff.seconds))
+    hours = f"{delta.split(':')[0]} hours"
+    minutes = f"{delta.split(':')[1]} minutes"
+    seconds = f"{delta.split(':')[2]} seconds"
+    displaylib.display_message(f"Total compare time: {{BRIGHT_YELLOW}}{hours} {minutes}, {seconds}")
+
+    if parser_obj.args.output_file:
+        with open(parser_obj.args.output_file, "w") as f:
+            for file_path, matches in session_obj.actual_matches.items():
+                output = list()
+                output.append("D")
+                output.append(file_path)
+                for match in matches:
+                    output.append(match)
+                f.write(f"{','.join(output)}\n")
+            for file_path in session_obj.unique:
+                output = list()
+                output.append("U")
+                output.append(file_path)
+                f.write(f"{','.join(output)}\n")
+            for file_path in session_obj.source_error_files:
+                output = list()
+                output.append("SE")
+                output.append(file_path)
+                f.write(f"{','.join(output)}\n")
+            for file_path in session_obj.possible_match_error_files:
+                output = list()
+                output.append("PME")
+                output.append(file_path)
+                f.write(f"{','.join(output)}\n")
+
+    result = ""
+    displaylib.display_message("\n\n")
+    while result.lower() not in {"matching", "m", "unique", "u", "both", "b", "quit", "q"}:
+        matching = "{{BRIGHT_YELLOW}}M{{COLOR_NONE}}atching files"
+        unique = "{{BRIGHT_YELLOW}}U{{COLOR_NONE}}nique files"
+        both = "{{BRIGHT_YELLOW}}B{{COLOR_NONE}}oth"
+        quitapp = "{{BRIGHT_YELLOW}}Q{{COLOR_NONE}}uit"
+        prompt = displaylib.format_string(f"Display the {matching}, {unique}, {both}, or {quitapp}? (M/U/B/Q)")
+        result = input(prompt)
+        if result.lower() in {"quit", "q"}:
+            sys.exit(0)
+
+    # ----------------------------------------------------------------------------------------------------------------------
+    if result.lower() in {"matching", "m", "both", "b"}:
+        displaylib.display_message("\n\n{{BRIGHT_GREEN}}MATCHES")
+        displaylib.display_message("="*80)
+
+        for file_path, matches in session_obj.actual_matches.items():
+            displaylib.display_message(file_path)
+            for match in matches:
+                displaylib.display_message(f"{{BRIGHT_CYAN}}{match}")
+            displaylib.display_message("\n\n")
+
+    if result.lower() in {"unique", "u", "both", "b"}:
+        displaylib.display_message("\n\n{{BRIGHT_RED}}FILES IN QUERY DIR THAT HAVE NO DUPLICATES IN CANONICAL DIR")
+        displaylib.display_message("=" * 80)
+
+        for file_path in session_obj.unique:
+            displaylib.display_message(file_path)
+
+
+main()

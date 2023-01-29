@@ -1,9 +1,10 @@
 #! /usr/bin/env python3
 
+import errno
 import os.path
 import re
 
-# TODO: Somehow I need to track any directories that we cannot access due to permission errors and list those
+
 class ScanDir(object):
     """
     A class to scan and store the attributes of every file in a single directory.
@@ -20,7 +21,11 @@ class ScanDir(object):
 
         self.scan_dir = scan_dir
 
-        self.error_files = set()
+        self.dir_permission_err_files = set()
+        self.dir_generic_err_files = set()
+        self.file_permission_err_files = set()
+        self.file_generic_err_files = set()
+        self.file_not_found_err_files = set()
 
         self.initial_count = 0
         self.checked_count = 0
@@ -107,6 +112,30 @@ class ScanDir(object):
         return False
 
     # ------------------------------------------------------------------------------------------------------------------
+    def os_walk_error(self,
+                      exception_obj):
+        """
+        Handle errors during the os.walk scan of the dir
+
+        :param exception_obj: The exception that occurred.
+
+        :return: Nothing.
+        """
+
+        self.error_count += 1
+
+        if os.path.isdir(exception_obj.filename):
+            if exception_obj.errno == errno.EACCES:
+                self.dir_permission_err_files.add(exception_obj.filename)
+            else:
+                self.dir_generic_err_files.add(exception_obj.filename)
+        else:
+            if exception_obj.errno == errno.EACCES:
+                self.file_permission_err_files.add(exception_obj.filename)
+            else:
+                self.file_generic_err_files.add(exception_obj.filename)
+
+    # ------------------------------------------------------------------------------------------------------------------
     def scan(self,
              skip_sub_dir=False,
              skip_hidden=False,
@@ -152,13 +181,20 @@ class ScanDir(object):
         incl_file_regexes = self.parameter_to_list(incl_file_regexes)
         excl_file_regexes = self.parameter_to_list(excl_file_regexes)
 
-        for root, sub_folders, files in os.walk(self.scan_dir):
+        for root, sub_folders, files in os.walk(self.scan_dir, onerror=self.os_walk_error):
 
             path_items = [item for item in root.split(os.path.sep) if item != ""]
 
             for file_name in files:
 
                 self.checked_count += 1
+
+                file_path = os.path.join(root, file_name)
+
+                if not os.access(file_path, os.R_OK):
+                    self.error_count += 1
+                    self.file_permission_err_files.add(file_path)
+                    continue
 
                 if self.checked_count % report_frequency == 0:
                     yield self.checked_count
@@ -187,8 +223,6 @@ class ScanDir(object):
                         self.skipped_exclude += 1
                         continue
 
-                file_path = os.path.join(root, file_name)
-
                 if os.path.islink(file_path):
                     self.skipped_links += 1
                     continue
@@ -196,7 +230,7 @@ class ScanDir(object):
                 try:
                     file_size = os.path.getsize(file_path)
                 except FileNotFoundError:
-                    self.error_files.add(file_path)
+                    self.file_not_found_err_files.add(file_path)
                     self.error_count += 1
                     continue
 
