@@ -111,6 +111,48 @@ def display_scan_results(scan_obj,
 
 
 # ----------------------------------------------------------------------------------------------------------------------
+def do_scan(session_obj,
+            scan_type_name,
+            scan_type_is_query=True):
+    """
+    Scans the directory
+
+    :param session_obj: The session object that manages the scans.
+    :param scan_type_name: The name of the scan directory. Should be either "canonical" or "query"
+    :param scan_type_is_query: If True, the scan type will be a query scan. Otherwise, it will be a canonical scan.
+
+    :return: True if a scan is left to run to its end. False if the user interrupts it using ctrl-c
+    """
+
+    displaylib.display_message(f"\n\n{{BRIGHT_GREEN}}{scan_type_name.upper()} DIRECTORY")
+    displaylib.display_message("=" * 80)
+
+    try:
+        if scan_type_is_query:
+            try:
+                for counter in session_obj.do_query_scan():
+                    error_count = displaylib.format_string(f"{{BRIGHT_RED}}{session_obj.query_scan.error_count}")
+                    displaylib.display_refreshable_message(f"Files scanned so far: {counter}   Errors: {error_count}")
+            except IOError as e:
+                displaylib.display_message(f"{{BRIGHT_RED}}ERROR:{{COLOR_NONE}} {str(e)}")
+                sys.exit(1)
+
+        else:
+            try:
+                for counter in session_obj.do_canonical_scan():
+                    error_count = displaylib.format_string(f"{{BRIGHT_RED}}{session_obj.query_scan.error_count}")
+                    displaylib.display_refreshable_message(f"Files scanned so far: {counter}   Errors: {error_count}")
+            except IOError as e:
+                displaylib.display_message(f"{{BRIGHT_RED}}ERROR:{{COLOR_NONE}} {str(e)}")
+                sys.exit(1)
+    except KeyboardInterrupt:
+        return False
+
+    displaylib.display_refreshable_message(" " * 80)
+    displaylib.finish_refreshable_message()
+
+
+# ----------------------------------------------------------------------------------------------------------------------
 def main():
     parser_obj = parser.Parser(sys.argv[1:])
     try:
@@ -184,40 +226,24 @@ def main():
             sys.exit(0)
 
     # ----------------------------------------------------------------------------------------------------------------------
-    displaylib.display_message("\n\n{{BRIGHT_GREEN}}QUERY DIRECTORY")
-    displaylib.display_message("="*80)
     then = datetime.datetime.now()
-    try:
-        for counter in session_obj.do_query_scan():
-            displaylib.display_refreshable_message(f"Files scanned so far: {counter}")
-    except IOError as e:
-        displaylib.display_message(f"{{BRIGHT_RED}}ERROR:{{COLOR_NONE}} {str(e)}")
-        sys.exit(1)
-    displaylib.display_refreshable_message(" "*80)
-    displaylib.finish_refreshable_message()
-
-    display_scan_results(session_obj.query_scan, then)
-
+    user_did_not_interrupt = do_scan(session_obj, "query", True)
+    if user_did_not_interrupt:
+        display_scan_results(session_obj.query_scan, then)
     if session_obj.query_scan.error_count > 0:
         display_errors(session_obj.query_scan, "query")
+    if not user_did_not_interrupt:
+        sys.exit(0)
 
     # ----------------------------------------------------------------------------------------------------------------------
-    displaylib.display_message("\n\n{{BRIGHT_GREEN}}CANONICAL DIRECTORY")
-    displaylib.display_message("="*80)
     then = datetime.datetime.now()
-    try:
-        for counter in session_obj.do_canonical_scan():
-            displaylib.display_refreshable_message(f"Files scanned so far: {counter}")
-    except IOError as e:
-        displaylib.display_message(f"{{BRIGHT_RED}}ERROR:{{COLOR_NONE}} {str(e)}")
-        sys.exit(1)
-    displaylib.display_refreshable_message(" "*80)
-    displaylib.finish_refreshable_message()
-
-    display_scan_results(session_obj.canonical_scan, then)
-
+    user_did_not_interrupt = do_scan(session_obj, "query", False)
+    if user_did_not_interrupt:
+        display_scan_results(session_obj.canonical_scan, then)
     if session_obj.canonical_scan.error_count > 0:
         display_errors(session_obj.canonical_scan, "canonical")
+    if not user_did_not_interrupt:
+        sys.exit(0)
 
     # ----------------------------------------------------------------------------------------------------------------------
     displaylib.display_message("\n\n{{BRIGHT_YELLOW}}COMPARING FILES:")
