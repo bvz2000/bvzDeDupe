@@ -3,7 +3,7 @@
 import os.path
 import re
 
-
+# TODO: Somehow I need to track any directories that we cannot access due to permission errors and list those
 class ScanDir(object):
     """
     A class to scan and store the attributes of every file in a single directory.
