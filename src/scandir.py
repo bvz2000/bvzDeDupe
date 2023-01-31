@@ -191,6 +191,11 @@ class ScanDir(object):
 
                 file_path = os.path.join(root, file_name)
 
+                # This needs to come before testing access, because a link always fails the os.R_OK test
+                if os.path.islink(file_path):
+                    self.skipped_links += 1
+                    continue
+
                 if not os.access(file_path, os.R_OK):
                     self.error_count += 1
                     self.file_permission_err_files.add(file_path)
@@ -222,10 +227,6 @@ class ScanDir(object):
                     if self.match_regex(regexes=excl_file_regexes, items=[file_name]):
                         self.skipped_exclude += 1
                         continue
-
-                if os.path.islink(file_path):
-                    self.skipped_links += 1
-                    continue
 
                 try:
                     file_size = os.path.getsize(file_path)

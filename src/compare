@@ -5,7 +5,7 @@ import os.path
 import sys
 import displaylib
 
-import parser
+import compareparser
 from session import Session
 
 
@@ -99,15 +99,17 @@ def display_scan_results(scan_obj,
     displaylib.display_message(f"Number of links skipped: {{BRIGHT_RED}}{scan_obj.skipped_links}")
     displaylib.display_message(f"Number of zero length files skipped: {{BRIGHT_RED}}{scan_obj.skipped_zero_len}")
     displaylib.display_message(f"Number of hidden files skipped: {{BRIGHT_RED}}{scan_obj.skipped_hidden}")
-    displaylib.display_message(f"Number of files skipped because they were outside of the inclusion regex's: {{BRIGHT_RED}}{scan_obj.skipped_include}")
-    displaylib.display_message(f"Number of files skipped because they matched the exclusion regex's: {{BRIGHT_RED}}{scan_obj.skipped_exclude}")
+    msg = f"{{BRIGHT_RED}}{scan_obj.skipped_include}"
+    displaylib.display_message(f"Number of files skipped because they were outside of the inclusion regex's: {msg}")
+    msg = f"{{BRIGHT_RED}}{scan_obj.skipped_exclude}"
+    displaylib.display_message(f"Number of files skipped because they matched the exclusion regex's: {msg}")
     displaylib.display_message(f"Number of files accumulated: {{BRIGHT_RED}}{scan_obj.initial_count}")
     diff = datetime.datetime.now() - start_time
     delta = str(datetime.timedelta(seconds=diff.seconds))
     hours = f"{delta.split(':')[0]} hours"
     minutes = f"{delta.split(':')[1]} minutes"
     seconds = f"{delta.split(':')[2]} seconds"
-    displaylib.display_message(f"Total scan time: {{BRIGHT_YELLOW}}{hours} {minutes}, {seconds}")
+    displaylib.display_message(f"Total scan time: {{BRIGHT_YELLOW}}{hours}, {minutes}, {seconds}")
 
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -151,10 +153,12 @@ def do_scan(session_obj,
     displaylib.display_refreshable_message(" " * 80)
     displaylib.finish_refreshable_message()
 
+    return True
+
 
 # ----------------------------------------------------------------------------------------------------------------------
 def main():
-    parser_obj = parser.Parser(sys.argv[1:])
+    parser_obj = compareparser.Parser(sys.argv[1:])
     try:
         parser_obj.validate()
     except (FileNotFoundError, NotADirectoryError, PermissionError) as e:
@@ -162,7 +166,7 @@ def main():
         displaylib.display_message(msg)
         sys.exit(1)
     except FileExistsError as e:
-        msg= f"{{YELLOW}}Warning:{{COLOR_NONE}} {e}"
+        msg = f"{{YELLOW}}Warning:{{COLOR_NONE}} {e}"
         displaylib.display_message(msg)
         result = ""
         while result.upper() not in "YN":
@@ -181,39 +185,54 @@ def main():
                           excl_file_regex=parser_obj.args.excl_file_regexes,
                           report_frequency=10)
 
-    # ----------------------------------------------------------------------------------------------------------------------
+    # ------------------------------------------------------------------------------------------------------------------
     displaylib.display_message("\n\n{{BRIGHT_GREEN}}SUMMARY")
     displaylib.display_message("="*80)
+
+    query_d = os.path.abspath(parser_obj.args.query_dir)
+    canonical_d = os.path.abspath(parser_obj.args.canonical_dir)
+
     displaylib.display_message("                      Query directory:",
-                               displaylib.format_string(f"{{BRIGHT_YELLOW}}{os.path.abspath(parser_obj.args.query_dir)}"))
+                               displaylib.format_string(f"{{BRIGHT_YELLOW}}{query_d}"))
     displaylib.display_message("                  Canonical directory:",
-                               displaylib.format_string(f"{{BRIGHT_YELLOW}}{os.path.abspath(parser_obj.args.canonical_dir)}"))
+                               displaylib.format_string(f"{{BRIGHT_YELLOW}}{canonical_d}"))
+
     if parser_obj.args.output_file is not None:
         output_file = os.path.abspath(parser_obj.args.output_file)
         output_file_display = f"{{BRIGHT_YELLOW}}{output_file}"
     else:
-        output_file = ""
         output_file_display = "{{BRIGHT_RED}}NO OUTPUT LOG FILE. QUERY RESULTS WILL ONLY BE DISPLAYED ON SCREEN."
+
     displaylib.display_message("                           Output log:",
                                displaylib.format_string(output_file_display))
+
     displaylib.display_message("                 Skip sub-directories:",
                                displaylib.format_boolean(parser_obj.args.skip_sub_dir))
+
     displaylib.display_message("                    Skip hidden files:",
                                displaylib.format_boolean(not parser_obj.args.include_hidden))
+
     displaylib.display_message("               Skip zero length files:",
                                displaylib.format_boolean(not parser_obj.args.include_zero_length))
+
     displaylib.display_message("                     Names must match:",
                                displaylib.format_boolean(parser_obj.args.match_on_name))
+
     displaylib.display_message("           File extensions must match:",
                                displaylib.format_boolean(parser_obj.args.match_on_type))
+
     displaylib.display_message("     Parent directory name must match:",
                                displaylib.format_boolean(parser_obj.args.match_on_parent))
+
     displaylib.display_message("            Relative paths must match:",
                                displaylib.format_boolean(parser_obj.args.match_on_relpath))
+
     displaylib.display_message("    Creation date and time must match:",
                                displaylib.format_boolean(parser_obj.args.match_on_ctime))
+
     displaylib.display_message("Modification date and time must match:",
                                displaylib.format_boolean(parser_obj.args.match_on_mtime))
+
     displaylib.display_message("                        Skip checksum:",
                                displaylib.format_boolean(parser_obj.args.skip_checksum))
 
@@ -237,7 +256,7 @@ def main():
 
     # ----------------------------------------------------------------------------------------------------------------------
     then = datetime.datetime.now()
-    user_did_not_interrupt = do_scan(session_obj, "query", False)
+    user_did_not_interrupt = do_scan(session_obj, "canonical", False)
     if user_did_not_interrupt:
         display_scan_results(session_obj.canonical_scan, then)
     if session_obj.canonical_scan.error_count > 0:
@@ -288,7 +307,7 @@ def main():
     hours = f"{delta.split(':')[0]} hours"
     minutes = f"{delta.split(':')[1]} minutes"
     seconds = f"{delta.split(':')[2]} seconds"
-    displaylib.display_message(f"Total compare time: {{BRIGHT_YELLOW}}{hours} {minutes}, {seconds}")
+    displaylib.display_message(f"Total compare time: {{BRIGHT_YELLOW}}{hours}, {minutes}, {seconds}")
 
     if parser_obj.args.output_file:
         with open(parser_obj.args.output_file, "w") as f:
