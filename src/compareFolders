@@ -3,10 +3,12 @@
 import datetime
 import os.path
 import sys
-import displaylib
 
-import compareparser
+from parsercompare import Parser
+import displaylib as displaylib
 from session import Session
+
+DELIMITER = "@COMPAREFOLDERS@"
 
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -158,7 +160,7 @@ def do_scan(session_obj,
 
 # ----------------------------------------------------------------------------------------------------------------------
 def main():
-    parser_obj = compareparser.Parser(sys.argv[1:])
+    parser_obj = Parser(sys.argv[1:])
     try:
         parser_obj.validate()
     except (FileNotFoundError, NotADirectoryError, PermissionError) as e:
@@ -174,6 +176,20 @@ def main():
         if result.upper() != "Y":
             sys.exit(0)
 
+    options = ""
+    if parser_obj.args.match_on_name:
+        options += "n"
+    if parser_obj.args.match_on_parent:
+        options += "p"
+    if parser_obj.args.match_on_type:
+        options += "t"
+    if parser_obj.args.match_on_relpath:
+        options += "r"
+    if parser_obj.args.match_on_ctime:
+        options += "c"
+    if parser_obj.args.match_on_mtime:
+        options += "m"
+
     session_obj = Session(query_dir=parser_obj.args.query_dir,
                           canonical_dir=parser_obj.args.canonical_dir,
                           skip_sub_dir=parser_obj.args.skip_sub_dir,
@@ -187,7 +203,7 @@ def main():
 
     # ------------------------------------------------------------------------------------------------------------------
     displaylib.display_message("\n\n{{BRIGHT_GREEN}}SUMMARY")
-    displaylib.display_message("="*80)
+    displaylib.display_message("=" * 80)
 
     query_d = os.path.abspath(parser_obj.args.query_dir)
     canonical_d = os.path.abspath(parser_obj.args.canonical_dir)
@@ -266,7 +282,7 @@ def main():
 
     # ----------------------------------------------------------------------------------------------------------------------
     displaylib.display_message("\n\n{{BRIGHT_YELLOW}}COMPARING FILES:")
-    displaylib.display_message("="*80)
+    displaylib.display_message("=" * 80)
 
     old_percent = 0
     then = datetime.datetime.now()
@@ -290,7 +306,7 @@ def main():
 
     # ----------------------------------------------------------------------------------------------------------------------
     displaylib.display_message("\n\n{{BRIGHT_GREEN}}RESULTS:")
-    displaylib.display_message("="*80)
+    displaylib.display_message("=" * 80)
 
     num_files_checked = f"{{BRIGHT_RED}}{len(session_obj.query_scan.files)}"
     num_duplicates = f"{{BRIGHT_RED}}{len(session_obj.actual_matches)}"
@@ -311,28 +327,32 @@ def main():
 
     if parser_obj.args.output_file:
         with open(parser_obj.args.output_file, "w") as f:
+            f.write(f"{options}\n")
+            f.write(f"{query_d}\n")
+            f.write(f"{canonical_d}\n")
+            f.write(f"{len(session_obj.actual_matches.items())}\n")
             for file_path, matches in session_obj.actual_matches.items():
                 output = list()
                 output.append("D")
                 output.append(file_path)
                 for match in matches:
                     output.append(match)
-                f.write(f"{','.join(output)}\n")
+                f.write(f"{DELIMITER.join(output)}\n")
             for file_path in session_obj.unique:
                 output = list()
                 output.append("U")
                 output.append(file_path)
-                f.write(f"{','.join(output)}\n")
+                f.write(f"{DELIMITER.join(output)}\n")
             for file_path in session_obj.source_error_files:
                 output = list()
                 output.append("SE")
                 output.append(file_path)
-                f.write(f"{','.join(output)}\n")
+                f.write(f"{DELIMITER.join(output)}\n")
             for file_path in session_obj.possible_match_error_files:
                 output = list()
                 output.append("PME")
                 output.append(file_path)
-                f.write(f"{','.join(output)}\n")
+                f.write(f"{DELIMITER.join(output)}\n")
 
     result = ""
     displaylib.display_message("\n\n")
@@ -349,7 +369,7 @@ def main():
     # ----------------------------------------------------------------------------------------------------------------------
     if result.lower() in {"matching", "m", "both", "b"}:
         displaylib.display_message("\n\n{{BRIGHT_GREEN}}MATCHES")
-        displaylib.display_message("="*80)
+        displaylib.display_message("=" * 80)
 
         for file_path, matches in session_obj.actual_matches.items():
             displaylib.display_message(file_path)

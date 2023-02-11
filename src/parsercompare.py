@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 """
-A module to manage command line parsing.
+A module to manage command line parsing for the compareFolders command.
 """
 from argparse import ArgumentParser
 import os.path
@@ -9,7 +9,7 @@ import sys
 import displaylib
 
 help_msg = f"""
-A program to compare all of the files in a query directory to the files in a
+A program to compareFolders all of the files in a query directory to the files in a
 canonical directory and list any which are duplicates. The query directory is
 the directory where you may have a bunch of files that may or may not already
 exist in another location (the canonical location where they are supposed to
@@ -27,7 +27,6 @@ characteristics using the options provided, then the only thing that is consider
 is whether the contents of the files are identical, regardless of the file name,
 date, or location in the directory structure.
 """
-
 
 class Parser(object):
     """
@@ -59,9 +58,9 @@ class Parser(object):
                                  type=str,
                                  help=help_str)
 
-        help_str = "If provided, the results of the comparison operation will be written to this file on disk as a " \
-                   "comma separated text file. If the file already exists, you will be prompted as to whether you " \
-                   "wish to overwrite it."
+        help_str = "If provided, the results of the comparison operation will be written to this log file on disk " \
+                   "as a comma separated text file. If the file already exists, you will be prompted as to whether " \
+                   "you wish to overwrite it."
         self.parser.add_argument("-o",
                                  dest="output_file",
                                  type=str,
@@ -113,7 +112,7 @@ class Parser(object):
                                  action="store_true",
                                  help=help_str)
 
-        help_str = "Skip the checksum and only compare on the name, file size, and any other (optional) metrics " \
+        help_str = "Skip the checksum and only compareFolders on the name, file size, and any other (optional) metrics " \
                    "listed above. Note: using this option automatically also enables the -n (match on name)" \
                    "option."
         self.parser.add_argument("-S",
@@ -183,7 +182,7 @@ class Parser(object):
                                  action="append",
                                  help=help_str)
 
-        help_str = "One or more config files that contain all of the compare parameters that you would otherwise " \
+        help_str = "One or more config files that contain all of the compareFolders parameters that you would otherwise " \
                    "supply via the command line (things like which files to skip or regex's to use as filters). You " \
                    "may use this option more than once if you have multiple config files you wish to use. If you do " \
                    "supply more than one config file, the regex settings in the config files will be merged. The " \
@@ -199,7 +198,7 @@ class Parser(object):
                                  help=help_str)
 
         help_str = "Saves the settings passed via the command line to the specified config file without actually " \
-                   "running the compare operation. If the config file already exists, you will be prompted as to " \
+                   "running the compareFolders operation. If the config file already exists, you will be prompted as to " \
                    "whether you wish to overwrite it. If you also included other config files via the -C option, the " \
                    "contents of those config files (subject to the limitations described in the -C option) will be " \
                    "merged as part of this saved config file, thereby merging the various configs into a single file."

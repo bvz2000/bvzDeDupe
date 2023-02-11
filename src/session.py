@@ -9,7 +9,7 @@ import comparefiles
 
 class Session(object):
     """
-    A class to manage a scan and compare session.
+    A class to manage a scan and compareFolders session.
     """
 
     # ------------------------------------------------------------------------------------------------------------------

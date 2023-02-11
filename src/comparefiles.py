@@ -1,6 +1,6 @@
 #! /usr/bin/env python3
 """
-A series of functions to compare two files.
+A series of functions to compareFolders two files.
 """
 
 import hashlib
@@ -13,11 +13,11 @@ def md5_partial_match(file_a_path,
                       num_bytes=1024):
     """
     Takes two files and compares the hash of the first <num_bytes> of these files to see if they are the same. This is
-    primarily used to do a quick compare of two files. If these bytes match, it still does not necessarily mean that the
+    primarily used to do a quick compareFolders of two files. If these bytes match, it still does not necessarily mean that the
     files are identical, just that they have a decent probability of being the same.
 
-    :param file_a_path: The first file to compare
-    :param file_b_path: The second file to compare
+    :param file_a_path: The first file to compareFolders
+    :param file_b_path: The second file to compareFolders
     :param num_bytes: The number of bytes to hash. Defaults to 1K (1024)
 
     :return: True if the first <num_bytes> bytes of the two files match (via a hash)
@@ -44,11 +44,11 @@ def md5_full_match(file_a_path,
                    file_a_checksum=None,
                    file_b_checksum=None):
     """
-    Performs a full md5 checksum compare between two files. If the files match, the md5 hash is returned. If they do not
+    Performs a full md5 checksum compareFolders between two files. If the files match, the md5 hash is returned. If they do not
     match, False is returned.
 
-    :param file_a_path: The first file to compare
-    :param file_b_path: The second file to compare
+    :param file_a_path: The first file to compareFolders
+    :param file_b_path: The second file to compareFolders
     :param file_a_checksum: If not None, then this will be used as the checksum for file A instead of calculating it.
            Defaults to None.
     :param file_b_checksum: If not None, then this will be used as the checksum for file B instead of calculating it.

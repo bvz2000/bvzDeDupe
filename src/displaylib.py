@@ -156,7 +156,7 @@ def format_string(msg):
 
 
 # ----------------------------------------------------------------------------------------------------------------------
-def display_message(*msgs):
+def display_message(*msgs: object) -> object:
     """
     Given any number of args, converts those args to strings, concatenates them, and prints to stdOut.
 
@@ -210,9 +210,27 @@ def display_refreshable_message(*msgs):
 
     # Print the message, flush buffer, and move back to the beginning of the line.
     message = " ".join([str(item) for item in msgs])
+    message = format_string(message)
     sys.stdout.write(message)
     sys.stdout.flush()
     sys.stdout.write("\b" * (len(message)))
+
+
+# ----------------------------------------------------------------------------------------------------------------------
+def flush_refreshable_message(length=80):
+    """
+    Call to clear out the current line. Used primarily when a line has been half printed and needs to be removed. This
+    does NOT move the cursor to a new line, it just clears out the current line and leaves the cursor at the beginning.
+
+    :param length: How many spaces to flush. Defaults to 80.
+
+    :return: Nothing.
+    """
+
+    sys.stdout.write("\b" * length)
+    sys.stdout.write(" " * length)
+    sys.stdout.write("\b" * length)
+    sys.stdout.flush()
 
 
 # ----------------------------------------------------------------------------------------------------------------------

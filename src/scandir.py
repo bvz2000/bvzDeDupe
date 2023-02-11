@@ -37,8 +37,8 @@ class ScanDir(object):
         self.skipped_include = 0
 
     # ------------------------------------------------------------------------------------------------------------------
-    def _get_metadata(self,
-                      file_path):
+    def get_metadata(self,
+                     file_path):
         """
         Gets the metadata for the given file path.
 
@@ -242,7 +242,7 @@ class ScanDir(object):
 
                 self.initial_count += 1
 
-                file_metadata = self._get_metadata(file_path)
+                file_metadata = self.get_metadata(file_path)
 
                 self._append_to_scan(file_path=file_path,
                                      metadata=file_metadata)
