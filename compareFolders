@@ -285,6 +285,7 @@ def main():
                                         ctime=parser_obj.args.match_on_ctime,
                                         mtime=parser_obj.args.match_on_mtime,
                                         skip_checksum=parser_obj.args.skip_checksum):
+
         dupes_str = f"{{BRIGHT_RED}}D:{{COLOR_NONE}} {len(session_obj.actual_matches.keys())}"
         unique_str = f"{{BRIGHT_RED}}U:{{COLOR_NONE}} {len(session_obj.unique)}"
         error_str = f"{{BRIGHT_RED}}E:{{COLOR_NONE}} {len(session_obj.source_error_files)}"
