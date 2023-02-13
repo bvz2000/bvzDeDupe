@@ -4,13 +4,10 @@ A module to manage command line parsing for the deleteDuplicates command.
 """
 from argparse import ArgumentParser
 import os.path
-import sys
-
-import displaylib
 
 help_msg = f"""
-A program to delete files that were identified as duplicates by the compareFolders app. This app requires
-that the compareFolders app be run first using the -o (output file) option. That output file which lists
+A program to delete files that were identified as duplicates by the bin app. This app requires
+that the bin app be run first using the -o (output file) option. That output file which lists
 the results of the comparison operation is used to determine which files to delete.
 
 By default, the delete files operation runs a sanity check before deleting each file. This can be as simple as
@@ -18,7 +15,7 @@ comparing the file size to make sure the files are still likely to be identical 
 in the query directory. But it can also run a checksum to make sure that the two files are actually bit for bit
 identical before deleting. This will, of course, add a fair bit of time to the delete operation. Additional checks,
 like whether the names match, the parent directory matches, the relative path matches, etc. can also be applied as
-part of this sanity check. But these can only be applied if they had been used in the original compareFolders
+part of this sanity check. But these can only be applied if they had been used in the original bin
 operation.
 
 Additional options include simply renaming the files with the prefix: "compareFoldersPendingDelete_" instead of actually
@@ -44,7 +41,7 @@ class Parser(object):
 
         self.parser = ArgumentParser(description=help_msg)
 
-        help_str = "The log file written out by the compareFolders command."
+        help_str = "The log file written out by the bin command."
         self.parser.add_argument('log_file',
                                  metavar='log_file',
                                  type=str,
@@ -52,9 +49,9 @@ class Parser(object):
 
         help_str = "Perform a check to ensure that the MD5 checksum of each file matches before deleting or " \
                    "renaming. By default each file is checked using the same comparison operations performed by the " \
-                   "original compareFolders session. Size is always compared. Name, Parent Directory Name, Relative " \
+                   "original bin session. Size is always compared. Name, Parent Directory Name, Relative " \
                    "Path, File Type, Creation Time, and Modification Time will also be compared if any of these were " \
-                   "used in the original compareFolders session. But a checksum is NOT automatically run. Use this " \
+                   "used in the original bin session. But a checksum is NOT automatically run. Use this " \
                    "option to force the checksum. Note: this will slow down the delete or rename operation by a " \
                    "significant amount."
         self.parser.add_argument("-c",

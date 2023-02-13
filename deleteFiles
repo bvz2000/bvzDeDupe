@@ -5,12 +5,13 @@ import sys
 
 from typing import Set, Tuple
 
-from parserdelete import Parser
-import displaylib as displaylib
-from querydir import QueryDir
-from canonicaldir import CanonicalDir
+from bvzdisplaylib import displaylib as displaylib
 
-import comparefiles
+from src.parserdelete import Parser
+from bvzcomparedirs.querydir import QueryDir
+from bvzcomparedirs.canonicaldir import CanonicalDir
+
+from bvzcomparedirs import comparefiles
 
 # Set to true when debugging if you don't want to actually really delete or rename. Same as using the -T option, but
 # this forces that on regardless of whether you remember to use it or not. Should be False for actual use.
@@ -377,7 +378,7 @@ def delete_or_rename_files(duplicates,
             displaylib.flush_refreshable_message()
             msg = f"{{BRIGHT_YELLOW}}Processing file {{COLOR_NONE}}{i + 1} {{BRIGHT_YELLOW}} of {{COLOR_NONE}}{count}"
             displaylib.display_message(msg)
-            displaylib.display_message(f"Operation canceled by user. {i+1} files were {action_past}.")
+            displaylib.display_message(f"Operation canceled by user. {i + 1} files were {action_past}.")
             display_errors(errors)
             if parser_obj.args.trial:
                 displaylib.display_message(f"{{BRIGHT_GREEN}}(Trial Run Only - No Files Were Touched){{COLOR_NONE}}")
