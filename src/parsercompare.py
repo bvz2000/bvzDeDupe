@@ -46,9 +46,10 @@ class Parser(object):
 
         self.parser = ArgumentParser(description=help_msg)
 
-        help_str = "The query directory."
+        help_str = "The query directories. You may supply as many directories here as needed."
         self.parser.add_argument('query_dir',
-                                 metavar='query directory',
+                                 metavar='query directories',
+                                 nargs="+",
                                  type=str,
                                  help=help_str)
 

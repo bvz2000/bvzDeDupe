@@ -191,7 +191,7 @@ def main():
     if parser_obj.args.match_on_mtime:
         options += "m"
 
-    session_obj = Session(query_dir=parser_obj.args.query_dir,
+    session_obj = Session(query_items=parser_obj.args.query_dir,
                           canonical_dir=parser_obj.args.canonical_dir,
                           skip_sub_dir=parser_obj.args.skip_sub_dir,
                           skip_hidden=not parser_obj.args.include_hidden,
@@ -206,12 +206,13 @@ def main():
     displaylib.display_message("\n\n{{BRIGHT_GREEN}}SUMMARY")
     displaylib.display_message("=" * 80)
 
-    query_d = os.path.abspath(parser_obj.args.query_dir)
     canonical_d = os.path.abspath(parser_obj.args.canonical_dir)
 
     str_len = 38
 
-    displaylib.display_message("Query directory:".rjust(str_len), f"{{BRIGHT_YELLOW}}{query_d}")
+    for i, query_d in enumerate(parser_obj.args.query_dir):
+        displaylib.display_message(f"Query directory {i + 1}:".rjust(str_len),
+                                   f"{{BRIGHT_YELLOW}}{os.path.abspath(query_d)}")
     displaylib.display_message(" Canonical directory:".rjust(str_len), f"{{BRIGHT_YELLOW}}{canonical_d}")
 
     if parser_obj.args.output_file is not None:
