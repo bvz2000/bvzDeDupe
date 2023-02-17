@@ -28,6 +28,7 @@ is whether the contents of the files are identical, regardless of the file name,
 date, or location in the directory structure.
 """
 
+
 class Parser(object):
     """
     A class to manage a single argparse object.
@@ -121,66 +122,136 @@ class Parser(object):
                                  action="store_true",
                                  help=help_str)
 
-        help_str = "Skip sub-directories of the scanned directories."
-        self.parser.add_argument("--skip-subdir",
-                                 dest="skip_sub_dir",
+        help_str = "Skip sub-directories of the query directory."
+        self.parser.add_argument("--query-skip-subdir",
+                                 dest="query_skip_sub_dir",
                                  action="store_true",
                                  help=help_str)
 
-        help_str = "Include hidden files in the comparison."
-        self.parser.add_argument("--include-hidden",
-                                 dest="include_hidden",
+        help_str = "Skip sub-directories of the canonical directories."
+        self.parser.add_argument("--canonical-skip-subdir",
+                                 dest="canonical_skip_sub_dir",
                                  action="store_true",
                                  help=help_str)
 
-        help_str = "Include zero length files in the comparison."
-        self.parser.add_argument("--include-zero-length",
-                                 dest="include_zero_length",
+        help_str = "Include hidden query files in the comparison."
+        self.parser.add_argument("--query-include-hidden",
+                                 dest="query_include_hidden",
                                  action="store_true",
+                                 help=help_str)
+
+        help_str = "Include hidden canonical files in the comparison."
+        self.parser.add_argument("--canonical-include-hidden",
+                                 dest="canonical_include_hidden",
+                                 action="store_true",
+                                 help=help_str)
+
+        help_str = "Include zero length query files in the comparison."
+        self.parser.add_argument("--query-include-zero-length",
+                                 dest="query_include_zero_length",
+                                 action="store_true",
+                                 help=help_str)
+
+        help_str = "Include zero length canonical files in the comparison."
+        self.parser.add_argument("--canonical-include-zero-length",
+                                 dest="canonical_include_zero_length",
+                                 action="store_true",
+                                 help=help_str)
+
+        help_str = "Regular expression(s) to control directory names that are INCLUDED in the scan. Only those QUERY " \
+                   "subdirectories that MATCH these regular expressions WILL be scanned. You may use this option " \
+                   "more than once if you have multiple regular expressions you wish to include. Always enclose the " \
+                   "regular expression in quotes to avoid the shell interpreting the characters passed. " \
+                   "\n\nExample:\n\n     --idr \"geo.*\" --idr \"music.*\""
+        self.parser.add_argument("--qidr",
+                                 dest="query_incl_dir_regexes",
+                                 nargs="+",
+                                 type=str,
+                                 action="store",
                                  help=help_str)
 
         help_str = "Regular expression(s) to control directory names that are INCLUDED in the scan. Only those " \
-                   "directories that MATCH these regular expressions WILL be scanned. You may use this option more " \
-                   "once if you have multiple regular expressions you wish to include. Always enclose the regular " \
-                   "expression in quotes to avoid the shell interpreting the characters passed.\n\nExample:\n\n     " \
-                   "--idr \"geo.*\" --idr \"music.*\""
-        self.parser.add_argument("--idr",
-                                 dest="incl_dir_regexes",
+                   "CANONICAL subdirectories that MATCH these regular expressions WILL be scanned. You may use this " \
+                   "option more than once if you have multiple regular expressions you wish to include. Always " \
+                   "enclose the regular expression in quotes to avoid the shell interpreting the characters passed. " \
+                   "\n\nExample:\n\n     --idr \"geo.*\" --idr \"music.*\""
+        self.parser.add_argument("--cidr",
+                                 dest="canonical_incl_dir_regexes",
+                                 nargs="+",
                                  type=str,
-                                 action="append",
+                                 action="store",
                                  help=help_str)
 
-        help_str = "Regular expression(s) to control directory names that are EXCLUDED from the scan. Any " \
-                   "directories that match these regular expressions WILL NOT be scanned. You may use this option " \
-                   "more once if you have multiple regular expressions you wish to include. Always enclose the " \
-                   "regular expression in quotes to avoid the shell interpreting the characters passed." \
+        help_str = "Regular expression(s) to control QUERY subdirectory names that are EXCLUDED from the scan. Any " \
+                   "QUERY subdirectories that match these regular expressions WILL NOT be scanned. You may use this " \
+                   "option more once if you have multiple regular expressions you wish to include. Always enclose " \
+                   "the regular expression in quotes to avoid the shell interpreting the characters passed." \
                    "\n\nExample:\n\n     --edr \"temp.*\" --edr \"trash.*\""
-        self.parser.add_argument("--edr",
-                                 dest="excl_dir_regexes",
+        self.parser.add_argument("--qedr",
+                                 dest="query_excl_dir_regexes",
+                                 nargs="+",
                                  type=str,
-                                 action="append",
+                                 action="store",
                                  help=help_str)
 
-        help_str = "Regular expression(s) to control file names that are INCLUDED in the scan. Only those files that " \
-                   "MATCH these regular expressions WILL be included in the comparison. You may use this option more " \
-                   "once if you have multiple regular expressions you wish to include. Always enclose the regular " \
-                   "expression in quotes to avoid the shell interpreting the characters passed.\n\nExample:\n\n     " \
-                   "--ifr \"final_.*\" --ifr \"finished_.*\""
-        self.parser.add_argument("--ifr",
-                                 dest="incl_file_regexes",
+        help_str = "Regular expression(s) to control CANONICAL subdirectory names that are EXCLUDED from the scan. " \
+                   "Any CANONICAL subdirectories that match these regular expressions WILL NOT be scanned. You may " \
+                   "use this option more once if you have multiple regular expressions you wish to include. Always " \
+                   "enclose the regular expression in quotes to avoid the shell interpreting the characters passed." \
+                   "\n\nExample:\n\n     --edr \"temp.*\" --edr \"trash.*\""
+        self.parser.add_argument("--cedr",
+                                 dest="canonical_excl_dir_regexes",
+                                 nargs="+",
                                  type=str,
-                                 action="append",
+                                 action="store",
                                  help=help_str)
 
-        help_str = "Regular expression(s) to control file names that are EXCLUDED from the scan. Any files that " \
-                   "MATCH these regular expressions WILL NOT be included in the comparison. You may use this option " \
-                   "more once if you have multiple regular expressions you wish to include. Always enclose the " \
-                   "regular expression in quotes to avoid the shell interpreting the characters passed." \
+        help_str = "Regular expression(s) to control QUERY file names that are INCLUDED in the scan. Only those " \
+                   "QUERY files that MATCH these regular expressions WILL be included in the comparison. You may " \
+                   "use this option more once if you have multiple regular expressions you wish to include. Always " \
+                   "enclose the regular expression in quotes to avoid the shell interpreting the characters passed. " \
+                   "\n\nExample:\n\n     --ifr \"final_.*\" --ifr \"finished_.*\""
+        self.parser.add_argument("--qifr",
+                                 dest="query_incl_file_regexes",
+                                 nargs="+",
+                                 type=str,
+                                 action="store",
+                                 help=help_str)
+
+        help_str = "Regular expression(s) to control CANONICAL file names that are INCLUDED in the scan. Only those " \
+                   "CANONICAL files that MATCH these regular expressions WILL be included in the comparison. You may " \
+                   "use this option more once if you have multiple regular expressions you wish to include. Always " \
+                   "enclose the regular expression in quotes to avoid the shell interpreting the characters passed. " \
+                   "\n\nExample:\n\n     --ifr \"final_.*\" --ifr \"finished_.*\""
+        self.parser.add_argument("--cifr",
+                                 dest="canonical_incl_file_regexes",
+                                 nargs="+",
+                                 type=str,
+                                 action="store",
+                                 help=help_str)
+
+        help_str = "Regular expression(s) to control QUERY file names that are EXCLUDED from the scan. Any QUERY " \
+                   "files that MATCH these regular expressions WILL NOT be included in the comparison. You may use " \
+                   "this option more once if you have multiple regular expressions you wish to include. Always " \
+                   "enclose the regular expression in quotes to avoid the shell interpreting the characters passed." \
                    "\n\nExample:\n\n     --efr \"delete_me_.*\" --efr \"old_.*\""
-        self.parser.add_argument("--efr",
-                                 dest="excl_file_regexes",
+        self.parser.add_argument("--qefr",
+                                 dest="query_excl_file_regexes",
+                                 nargs="+",
                                  type=str,
-                                 action="append",
+                                 action="store",
+                                 help=help_str)
+
+        help_str = "Regular expression(s) to control CANONICAL file names that are EXCLUDED from the scan. Any " \
+                   "CANONICAL files that MATCH these regular expressions WILL NOT be included in the comparison. " \
+                   "You may use this option more once if you have multiple regular expressions you wish to include. " \
+                   "Always enclose the regular expression in quotes to avoid the shell interpreting the characters " \
+                   "passed. \n\nExample:\n\n     --efr \"delete_me_.*\" --efr \"old_.*\""
+        self.parser.add_argument("--cefr",
+                                 dest="canonical_excl_file_regexes",
+                                 nargs="+",
+                                 type=str,
+                                 action="store",
                                  help=help_str)
 
         help_str = "One or more config files that contain all of the compare parameters that you would otherwise " \
@@ -195,7 +266,7 @@ class Parser(object):
         self.parser.add_argument("-C",
                                  dest="config_paths",
                                  type=str,
-                                 action="append",
+                                 action="store",
                                  help=help_str)
 
         help_str = "Saves the settings passed via the command line to the specified config file without actually " \
