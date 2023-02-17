@@ -106,7 +106,7 @@ def display_scan_results(scan_obj,
     displaylib.display_message(f"Number of files skipped because they were outside of the inclusion regex's: {msg}")
     msg = f"{{BRIGHT_RED}}{scan_obj.skipped_exclude}"
     displaylib.display_message(f"Number of files skipped because they matched the exclusion regex's: {msg}")
-    displaylib.display_message(f"Number of files accumulated: {{BRIGHT_RED}}{scan_obj.initial_count}")
+    displaylib.display_message(f"{{BRIGHT_CYAN}}Number of files accumulated: {{BRIGHT_RED}}{scan_obj.initial_count}")
     diff = datetime.datetime.now() - start_time
     delta = str(datetime.timedelta(seconds=diff.seconds))
     hours = f"{delta.split(':')[0]} hours"
@@ -193,13 +193,20 @@ def main():
 
     session_obj = Session(query_items=parser_obj.args.query_dir,
                           canonical_dir=parser_obj.args.canonical_dir,
-                          skip_sub_dir=parser_obj.args.skip_sub_dir,
-                          skip_hidden=not parser_obj.args.include_hidden,
-                          skip_zero_len=not parser_obj.args.include_zero_length,
-                          incl_dir_regex=parser_obj.args.incl_dir_regexes,
-                          excl_dir_regex=parser_obj.args.excl_dir_regexes,
-                          incl_file_regex=parser_obj.args.incl_file_regexes,
-                          excl_file_regex=parser_obj.args.excl_file_regexes,
+                          query_skip_sub_dir=parser_obj.args.query_skip_sub_dir,
+                          query_skip_hidden=not parser_obj.args.query_include_hidden,
+                          query_skip_zero_len=not parser_obj.args.query_include_zero_length,
+                          query_incl_dir_regexes=parser_obj.args.query_incl_dir_regexes,
+                          query_excl_dir_regexes=parser_obj.args.query_excl_dir_regexes,
+                          query_incl_file_regexes=parser_obj.args.query_incl_file_regexes,
+                          query_excl_file_regexes=parser_obj.args.query_excl_file_regexes,
+                          canonical_skip_sub_dir=parser_obj.args.canonical_skip_sub_dir,
+                          canonical_skip_hidden=not parser_obj.args.canonical_include_hidden,
+                          canonical_skip_zero_len=not parser_obj.args.canonical_include_zero_length,
+                          canonical_incl_dir_regexes=parser_obj.args.canonical_incl_dir_regexes,
+                          canonical_excl_dir_regexes=parser_obj.args.canonical_excl_dir_regexes,
+                          canonical_incl_file_regexes=parser_obj.args.canonical_incl_file_regexes,
+                          canonical_excl_file_regexes=parser_obj.args.canonical_excl_file_regexes,
                           report_frequency=10)
 
     # ------------------------------------------------------------------------------------------------------------------
@@ -223,12 +230,75 @@ def main():
 
     displaylib.display_message("Output log:".rjust(str_len),
                                output_file_display)
-    displaylib.display_message("Skip sub-directories:".rjust(str_len),
-                               parser_obj.args.skip_sub_dir)
-    displaylib.display_message("Skip hidden files:".rjust(str_len),
-                               displaylib.format_boolean(not parser_obj.args.include_hidden))
-    displaylib.display_message("Skip zero length files:".rjust(str_len),
-                               displaylib.format_boolean(not parser_obj.args.include_zero_length))
+    
+    displaylib.display_message("\n")
+    displaylib.display_message(f"{{BRIGHT_GREEN}}QUERY ITEMS".rjust(52))
+    displaylib.display_message("Skip query sub-directories:".rjust(str_len),
+                               displaylib.format_boolean(parser_obj.args.query_skip_sub_dir))
+    displaylib.display_message("Skip hidden query files:".rjust(str_len),
+                               displaylib.format_boolean(not parser_obj.args.query_include_hidden))
+    displaylib.display_message("Skip zero length query files:".rjust(str_len),
+                               displaylib.format_boolean(not parser_obj.args.query_include_zero_length))
+    if parser_obj.args.query_incl_dir_regexes is not None:
+        displaylib.display_message("Include query sub-dir regex:".rjust(str_len),
+                                   ", ".join(parser_obj.args.query_incl_dir_regexes))
+    else:
+        displaylib.display_message("Include query sub-dir regex:".rjust(str_len),
+                                   "")
+    if parser_obj.args.query_excl_dir_regexes is not None:
+        displaylib.display_message("Exclude query sub-dir regex:".rjust(str_len),
+                                   ", ".join(parser_obj.args.query_excl_dir_regexes))
+    else:
+        displaylib.display_message("Exclude query sub-dir regex:".rjust(str_len),
+                                   "")
+    if parser_obj.args.query_incl_file_regexes is not None:
+        displaylib.display_message("Include query file regex:".rjust(str_len),
+                                   ", ".join(parser_obj.args.query_incl_file_regexes))
+    else:
+        displaylib.display_message("Include query file regex:".rjust(str_len),
+                                   "")
+    if parser_obj.args.query_excl_file_regexes is not None:
+        displaylib.display_message("Exclude query file regex:".rjust(str_len),
+                                   ", ".join(parser_obj.args.query_excl_file_regexes))
+    else:
+        displaylib.display_message("Exclude query file regex:".rjust(str_len),
+                                   "")
+    
+    displaylib.display_message("\n")
+    displaylib.display_message("{{BRIGHT_GREEN}}CANONICAL DIRECTORY".rjust(54))
+    displaylib.display_message("Skip canonical sub-directories:".rjust(str_len),
+                               displaylib.format_boolean(parser_obj.args.canonical_skip_sub_dir))
+    displaylib.display_message("Skip hidden canonical files:".rjust(str_len),
+                               displaylib.format_boolean(not parser_obj.args.canonical_include_hidden))
+    displaylib.display_message("Skip zero length canonical files:".rjust(str_len),
+                               displaylib.format_boolean(not parser_obj.args.canonical_include_zero_length))
+    if parser_obj.args.canonical_incl_dir_regexes is not None:
+        displaylib.display_message("Include canonical sub-dir regex:".rjust(str_len),
+                                   ", ".join(parser_obj.args.canonical_incl_dir_regexes))
+    else:
+        displaylib.display_message("Include canonical sub-dir regex:".rjust(str_len),
+                                   "")
+    if parser_obj.args.canonical_excl_dir_regexes is not None:
+        displaylib.display_message("Exclude canonical sub-dir regex:".rjust(str_len),
+                                   ", ".join(parser_obj.args.canonical_excl_dir_regexes))
+    else:
+        displaylib.display_message("Exclude canonical sub-dir regex:".rjust(str_len),
+                                   "")
+    if parser_obj.args.canonical_incl_file_regexes is not None:
+        displaylib.display_message("Include canonical file regex:".rjust(str_len),
+                                   ", ".join(parser_obj.args.canonical_incl_file_regexes))
+    else:
+        displaylib.display_message("Include canonical file regex:".rjust(str_len),
+                                   "")
+    if parser_obj.args.canonical_excl_file_regexes is not None:
+        displaylib.display_message("Exclude canonical file regex:".rjust(str_len),
+                                   ", ".join(parser_obj.args.canonical_excl_file_regexes))
+    else:
+        displaylib.display_message("Exclude canonical file regex:".rjust(str_len),
+                                   "")
+
+    displaylib.display_message("\n")
+    displaylib.display_message(f"{{BRIGHT_GREEN}}COMPARISON SETTINGS".rjust(52))
     displaylib.display_message("Names must match:".rjust(str_len),
                                displaylib.format_boolean(parser_obj.args.match_on_name))
     displaylib.display_message("File extensions must match:".rjust(str_len),
@@ -309,8 +379,8 @@ def main():
     num_self = f"{{BRIGHT_RED}}{len(session_obj.skipped_self)}"
 
     displaylib.display_message(f"Number of files checked: {num_files_checked}")
-    displaylib.display_message(f"Number of query files that are duplicates of canonical files: {num_duplicates}")
-    displaylib.display_message(f"Number of query files that have no duplicates in canonical dir: {num_unique}")
+    displaylib.display_message(f"{{BRIGHT_CYAN}}Number of query files that are duplicates of canonical files: {num_duplicates}")
+    displaylib.display_message(f"{{BRIGHT_CYAN}}Number of query files that have no duplicates in canonical dir: {num_unique}")
     displaylib.display_message(f"Number of times a file was compared with itself: {num_self}")
     if not parser_obj.args.skip_checksum:
         displaylib.display_message(f"Number of times a checksum was reused: {num_reused_checksum}")
