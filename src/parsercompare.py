@@ -140,9 +140,21 @@ class Parser(object):
                                  action="store_true",
                                  help=help_str)
 
+        help_str = "Skip hidden query subdirectories in the comparison."
+        self.parser.add_argument("--query-skip-hidden-dirs",
+                                 dest="query_skip_hidden_dirs",
+                                 action="store_true",
+                                 help=help_str)
+
         help_str = "Include hidden canonical files in the comparison."
         self.parser.add_argument("--canonical-include-hidden",
                                  dest="canonical_include_hidden",
+                                 action="store_true",
+                                 help=help_str)
+
+        help_str = "Skip hidden canonical subdirectories in the comparison."
+        self.parser.add_argument("--canonical-skip-hidden-dirs",
+                                 dest="canonical_skip_hidden_dirs",
                                  action="store_true",
                                  help=help_str)
 
