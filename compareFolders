@@ -27,7 +27,7 @@ def display_scan_errors(scan_obj,
         Nothing.
     """
 
-    msg = f"{{BRIGHT_RED}}There have been errors scanning the {scan_type_name} directory. The compare operation "
+    msg = f"\n\n{{BRIGHT_RED}}There have been errors scanning the {scan_type_name} directory. The compare operation "
     msg += "cannot be run until these errors have been addressed."
     dl.msg(msg)
     result = dl.multiple_choice_user_input("Do you want to list the errors now? Or just quit?",
@@ -37,23 +37,23 @@ def display_scan_errors(scan_obj,
     if result in {"Q"}:
         sys.exit(0)
 
-    count = len(scan_obj.dir_permission_err_files)
+    count = len(scan_obj.dir_permission_err_dirs)
     dl.msg("\n\n")
     msg = f"{{BRIGHT_YELLOW}}DIRECTORIES WITH PERMISSION ERRORS:{{COLOR_NONE}}"
     msg += f"  ({{BRIGHT_RED}}{count}{{COLOR_NONE}} Errors)"
     dl.msg(msg)
     dl.msg("=" * 80)
-    for err_file in scan_obj.dir_permission_err_files:
-        dl.msg(err_file)
+    for err_dir in scan_obj.dir_permission_err_dirs:
+        dl.msg(err_dir)
 
-    count = len(scan_obj.dir_permission_err_files)
+    count = len(scan_obj.dir_generic_err_dirs)
     dl.msg("\n\n")
     msg = f"{{BRIGHT_YELLOW}}DIRECTORIES WITH UNDEFINED ERRORS:{{COLOR_NONE}}"
     msg += f"  ({{BRIGHT_RED}}{count}{{COLOR_NONE}} Errors)"
     dl.msg(msg)
     dl.msg("=" * 80)
-    for err_file in scan_obj.dir_generic_err_files:
-        dl.msg(err_file)
+    for err_dir in scan_obj.dir_generic_err_dirs:
+        dl.msg(err_dir)
 
     count = len(scan_obj.file_permission_err_files)
     dl.msg("\n\n")
@@ -64,7 +64,7 @@ def display_scan_errors(scan_obj,
     for err_file in scan_obj.file_permission_err_files:
         dl.msg(err_file)
 
-    count = len(scan_obj.file_permission_err_files)
+    count = len(scan_obj.file_generic_err_files)
     dl.msg("\n\n")
     msg = f"{{BRIGHT_YELLOW}}FILES WITH UNDEFINED ERRORS:{{COLOR_NONE}}"
     msg += f"  ({{BRIGHT_RED}}{count}{{COLOR_NONE}} Errors)"
