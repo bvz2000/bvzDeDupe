@@ -34,6 +34,8 @@ class Parser(object):
     A class to manage a single argparse object.
     """
 
+    # TODO: Allow the user to ignore the different error types
+
     # ----------------------------------------------------------------------------------------------------------------------
     def __init__(self,
                  commandline_args):
@@ -174,7 +176,7 @@ class Parser(object):
                    "subdirectories that MATCH these regular expressions WILL be scanned. You may use this option " \
                    "more than once if you have multiple regular expressions you wish to include. Always enclose the " \
                    "regular expression in quotes to avoid the shell interpreting the characters passed. " \
-                   "\n\nExample:\n\n     --idr \"geo.*\" --idr \"music.*\""
+                   "\n\nExample:\n\n     --qidr \"geo.*\" --idr \"music.*\""
         self.parser.add_argument("--qidr",
                                  dest="query_incl_dir_regexes",
                                  nargs="+",
@@ -186,7 +188,7 @@ class Parser(object):
                    "CANONICAL subdirectories that MATCH these regular expressions WILL be scanned. You may use this " \
                    "option more than once if you have multiple regular expressions you wish to include. Always " \
                    "enclose the regular expression in quotes to avoid the shell interpreting the characters passed. " \
-                   "\n\nExample:\n\n     --idr \"geo.*\" --idr \"music.*\""
+                   "\n\nExample:\n\n     --cidr \"geo.*\" --idr \"music.*\""
         self.parser.add_argument("--cidr",
                                  dest="canonical_incl_dir_regexes",
                                  nargs="+",
@@ -198,7 +200,7 @@ class Parser(object):
                    "QUERY subdirectories that match these regular expressions WILL NOT be scanned. You may use this " \
                    "option more once if you have multiple regular expressions you wish to include. Always enclose " \
                    "the regular expression in quotes to avoid the shell interpreting the characters passed." \
-                   "\n\nExample:\n\n     --edr \"temp.*\" --edr \"trash.*\""
+                   "\n\nExample:\n\n     --qedr \"temp.*\" --edr \"trash.*\""
         self.parser.add_argument("--qedr",
                                  dest="query_excl_dir_regexes",
                                  nargs="+",
@@ -210,7 +212,7 @@ class Parser(object):
                    "Any CANONICAL subdirectories that match these regular expressions WILL NOT be scanned. You may " \
                    "use this option more once if you have multiple regular expressions you wish to include. Always " \
                    "enclose the regular expression in quotes to avoid the shell interpreting the characters passed." \
-                   "\n\nExample:\n\n     --edr \"temp.*\" --edr \"trash.*\""
+                   "\n\nExample:\n\n     --cedr \"temp.*\" --edr \"trash.*\""
         self.parser.add_argument("--cedr",
                                  dest="canonical_excl_dir_regexes",
                                  nargs="+",
@@ -222,7 +224,7 @@ class Parser(object):
                    "QUERY files that MATCH these regular expressions WILL be included in the comparison. You may " \
                    "use this option more once if you have multiple regular expressions you wish to include. Always " \
                    "enclose the regular expression in quotes to avoid the shell interpreting the characters passed. " \
-                   "\n\nExample:\n\n     --ifr \"final_.*\" --ifr \"finished_.*\""
+                   "\n\nExample:\n\n     --qifr \"final_.*\" --ifr \"finished_.*\""
         self.parser.add_argument("--qifr",
                                  dest="query_incl_file_regexes",
                                  nargs="+",
@@ -234,7 +236,7 @@ class Parser(object):
                    "CANONICAL files that MATCH these regular expressions WILL be included in the comparison. You may " \
                    "use this option more once if you have multiple regular expressions you wish to include. Always " \
                    "enclose the regular expression in quotes to avoid the shell interpreting the characters passed. " \
-                   "\n\nExample:\n\n     --ifr \"final_.*\" --ifr \"finished_.*\""
+                   "\n\nExample:\n\n     --cifr \"final_.*\" --ifr \"finished_.*\""
         self.parser.add_argument("--cifr",
                                  dest="canonical_incl_file_regexes",
                                  nargs="+",
@@ -246,7 +248,7 @@ class Parser(object):
                    "files that MATCH these regular expressions WILL NOT be included in the comparison. You may use " \
                    "this option more once if you have multiple regular expressions you wish to include. Always " \
                    "enclose the regular expression in quotes to avoid the shell interpreting the characters passed." \
-                   "\n\nExample:\n\n     --efr \"delete_me_.*\" --efr \"old_.*\""
+                   "\n\nExample:\n\n     --qefr \"delete_me_.*\" --efr \"old_.*\""
         self.parser.add_argument("--qefr",
                                  dest="query_excl_file_regexes",
                                  nargs="+",
@@ -258,7 +260,7 @@ class Parser(object):
                    "CANONICAL files that MATCH these regular expressions WILL NOT be included in the comparison. " \
                    "You may use this option more once if you have multiple regular expressions you wish to include. " \
                    "Always enclose the regular expression in quotes to avoid the shell interpreting the characters " \
-                   "passed. \n\nExample:\n\n     --efr \"delete_me_.*\" --efr \"old_.*\""
+                   "passed. \n\nExample:\n\n     --cefr \"delete_me_.*\" --efr \"old_.*\""
         self.parser.add_argument("--cefr",
                                  dest="canonical_excl_file_regexes",
                                  nargs="+",
