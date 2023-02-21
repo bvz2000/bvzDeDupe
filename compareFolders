@@ -27,12 +27,14 @@ def display_scan_errors(scan_obj,
         Nothing.
     """
 
-    msg = f"\n\n{{BRIGHT_RED}}There have been errors scanning the {scan_type_name} directory. The compare operation "
-    msg += "cannot be run until these errors have been addressed."
+    msg = f"\n\n{{BRIGHT_RED}}There have been errors scanning the {scan_type_name} directory.\n"
+    msg += "The compare operation cannot be run until these errors have either been:\n\n"
+    msg += "  1) Fixed or\n  2) Reviewed and then ignored.\n"
     dl.msg(msg)
-    result = dl.multiple_choice_user_input("Do you want to list the errors now? Or just quit?",
-                                           legal_answers=["L", "Q"],
-                                           alternate_legal_answers={"LIST": "L", "QUIT": "Q"})
+    msg = "Do you want to review the errors now? Or just quit?"
+    result = dl.multiple_choice_user_input(msg,
+                                           legal_answers=["R", "Q"],
+                                           alternate_legal_answers={"REVIEW": "R", "QUIT": "Q"})
 
     if result in {"Q"}:
         sys.exit(0)
@@ -82,7 +84,13 @@ def display_scan_errors(scan_obj,
     for err_file in scan_obj.file_not_found_err_files:
         dl.msg(err_file)
 
-    sys.exit(0)
+    msg = f"\n\nDo you want to ignore these errors (and continue with the compare)?, or just quit?"
+    result = dl.multiple_choice_user_input(msg,
+                                           legal_answers=["I", "Q"],
+                                           alternate_legal_answers={"IGNORE": "I", "QUIT": "Q"})
+
+    if result in {"Q"}:
+        sys.exit(0)
 
 
 # ----------------------------------------------------------------------------------------------------------------------
