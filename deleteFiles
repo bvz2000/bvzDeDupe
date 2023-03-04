@@ -5,13 +5,13 @@ import sys
 
 from typing import Set, Tuple
 
-from bvzdisplaylib import displaylib as displaylib
+from bvzdisplaylib import displaylib as dl
 
 from src.parserdelete import Parser
-from bvzcomparedirs.querydir import QueryDir
-from bvzcomparedirs.canonicaldir import CanonicalDir
+from bvzscanfilesystem.scanfiles import ScanFiles
+from bvzcomparedirs.canonicalfiles import CanonicalFiles
 
-from bvzcomparedirs import comparefiles
+from bvzcomparedirs import comparesession
 
 # Set to true when debugging if you don't want to actually really delete or rename. Same as using the -T option, but
 # this forces that on regardless of whether you remember to use it or not. Should be False for actual use.
@@ -40,7 +40,7 @@ def parse_command_line() -> Parser:
         parser_obj.validate()
     except (FileNotFoundError, NotADirectoryError, PermissionError) as e:
         msg = f"{{RED}}Error:{{COLOR_NONE}} {e}"
-        displaylib.display_message(msg)
+        dl.print_msg(msg)
         sys.exit(EXIT_UNABLE_TO_PARSE)
 
     return parser_obj

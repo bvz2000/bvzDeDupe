@@ -11,6 +11,7 @@ from src.parsercompare import Parser
 
 DELIMITER = "@COMPAREFOLDERS@"
 
+NOT_VALID_PATH_ERROR = 1
 
 # ----------------------------------------------------------------------------------------------------------------------
 def display_scan_errors(scan_obj,
@@ -30,64 +31,73 @@ def display_scan_errors(scan_obj,
     msg = f"\n\n{{BRIGHT_RED}}There have been errors scanning the {scan_type_name} directory.\n"
     msg += "The compare operation cannot be run until these errors have either been:\n\n"
     msg += "  1) Fixed or\n  2) Reviewed and then ignored.\n"
-    dl.msg(msg)
+    dl.print_msg(msg)
     msg = "Do you want to review the errors now? Or just quit?"
-    result = dl.multiple_choice_user_input(msg,
-                                           legal_answers=["R", "Q"],
-                                           alternate_legal_answers={"REVIEW": "R", "QUIT": "Q"})
+    result = dl.mult_choice_input(msg,
+                                  legal_answers=["R", "Q"],
+                                  alternate_legal_answers={"REVIEW": "R", "QUIT": "Q"})
 
     if result in {"Q"}:
         sys.exit(0)
 
     count = len(scan_obj.dir_permission_err_dirs)
-    dl.msg("\n\n")
+    dl.print_msg("\n\n")
     msg = f"{{BRIGHT_YELLOW}}DIRECTORIES WITH PERMISSION ERRORS:{{COLOR_NONE}}"
     msg += f"  ({{BRIGHT_RED}}{count}{{COLOR_NONE}} Errors)"
-    dl.msg(msg)
-    dl.msg("=" * 80)
+    dl.print_msg(msg)
+    dl.print_msg("=" * 80)
     for err_dir in scan_obj.dir_permission_err_dirs:
-        dl.msg(err_dir)
+        dl.print_msg(err_dir)
+
+    count = len(scan_obj.dir_not_found_err_dirs)
+    dl.print_msg("\n\n")
+    msg = f"{{BRIGHT_YELLOW}}DIRECTORIES WITH DIRECTORY NOT FOUND ERRORS:{{COLOR_NONE}}"
+    msg += f"  ({{BRIGHT_RED}}{count}{{COLOR_NONE}} Errors)"
+    dl.print_msg(msg)
+    dl.print_msg("=" * 80)
+    for err_dir in scan_obj.dir_not_found_err_dirs:
+        dl.print_msg(err_dir)
 
     count = len(scan_obj.dir_generic_err_dirs)
-    dl.msg("\n\n")
+    dl.print_msg("\n\n")
     msg = f"{{BRIGHT_YELLOW}}DIRECTORIES WITH UNDEFINED ERRORS:{{COLOR_NONE}}"
     msg += f"  ({{BRIGHT_RED}}{count}{{COLOR_NONE}} Errors)"
-    dl.msg(msg)
-    dl.msg("=" * 80)
+    dl.print_msg(msg)
+    dl.print_msg("=" * 80)
     for err_dir in scan_obj.dir_generic_err_dirs:
-        dl.msg(err_dir)
+        dl.print_msg(err_dir)
 
     count = len(scan_obj.file_permission_err_files)
-    dl.msg("\n\n")
+    dl.print_msg("\n\n")
     msg = f"{{BRIGHT_YELLOW}}FILES WITH PERMISSION ERRORS:{{COLOR_NONE}}"
     msg += f"  ({{BRIGHT_RED}}{count}{{COLOR_NONE}} Errors)"
-    dl.msg(msg)
-    dl.msg("=" * 80)
+    dl.print_msg(msg)
+    dl.print_msg("=" * 80)
     for err_file in scan_obj.file_permission_err_files:
-        dl.msg(err_file)
+        dl.print_msg(err_file)
 
     count = len(scan_obj.file_generic_err_files)
-    dl.msg("\n\n")
+    dl.print_msg("\n\n")
     msg = f"{{BRIGHT_YELLOW}}FILES WITH UNDEFINED ERRORS:{{COLOR_NONE}}"
     msg += f"  ({{BRIGHT_RED}}{count}{{COLOR_NONE}} Errors)"
-    dl.msg(msg)
-    dl.msg("=" * 80)
+    dl.print_msg(msg)
+    dl.print_msg("=" * 80)
     for err_file in scan_obj.file_generic_err_files:
-        dl.msg(err_file)
+        dl.print_msg(err_file)
 
     count = len(scan_obj.file_not_found_err_files)
-    dl.msg("\n\n")
+    dl.print_msg("\n\n")
     msg = f"{{BRIGHT_YELLOW}}FILES WITH FILE NOT FOUND ERRORS:{{COLOR_NONE}}"
     msg += f"  ({{BRIGHT_RED}}{count}{{COLOR_NONE}} Errors)"
-    dl.msg(msg)
-    dl.msg("=" * 80)
+    dl.print_msg(msg)
+    dl.print_msg("=" * 80)
     for err_file in scan_obj.file_not_found_err_files:
-        dl.msg(err_file)
+        dl.print_msg(err_file)
 
     msg = f"\n\nDo you want to ignore these errors (and continue with the compare)?, or just quit?"
-    result = dl.multiple_choice_user_input(msg,
-                                           legal_answers=["I", "Q"],
-                                           alternate_legal_answers={"IGNORE": "I", "QUIT": "Q"})
+    result = dl.mult_choice_input(msg,
+                                  legal_answers=["I", "Q"],
+                                  alternate_legal_answers={"IGNORE": "I", "QUIT": "Q"})
 
     if result in {"Q"}:
         sys.exit(0)
@@ -105,33 +115,33 @@ def display_scan_results(scan_obj,
     :return: Nothing.
     """
 
-    dl.msg(f"Number of files scanned: {{BRIGHT_RED}}{scan_obj.checked_count}")
+    dl.print_msg(f"Number of files scanned: {{BRIGHT_RED}}{scan_obj.checked_count}")
     if scan_obj.error_count == 0:
-        dl.msg(f"Number of errors: {{BRIGHT_RED}}{scan_obj.error_count}")
+        dl.print_msg(f"Number of errors: {{BRIGHT_RED}}{scan_obj.error_count}")
     else:
-        dl.msg(f"Number of errors: {{BG_RED}}{{BLINK}}{scan_obj.error_count}")
-    dl.msg(f"Number of links skipped: {{BRIGHT_RED}}{scan_obj.skipped_links}")
-    dl.msg(f"Number of zero length files skipped: {{BRIGHT_RED}}{scan_obj.skipped_zero_len}")
-    dl.msg(f"Number of hidden files skipped: {{BRIGHT_RED}}{scan_obj.skipped_hidden_files}")
-    dl.msg(f"Number of hidden directories skipped: {{BRIGHT_RED}}{scan_obj.skipped_hidden_dirs}")
+        dl.print_msg(f"Number of errors: {{BG_RED}}{{BLINK}}{scan_obj.error_count}")
+    dl.print_msg(f"Number of links skipped: {{BRIGHT_RED}}{scan_obj.skipped_links}")
+    dl.print_msg(f"Number of zero length files skipped: {{BRIGHT_RED}}{scan_obj.skipped_zero_len}")
+    dl.print_msg(f"Number of hidden files skipped: {{BRIGHT_RED}}{scan_obj.skipped_hidden_files}")
+    dl.print_msg(f"Number of hidden directories skipped: {{BRIGHT_RED}}{scan_obj.skipped_hidden_dirs}")
 
     msg = f"{{BRIGHT_RED}}{scan_obj.skipped_include_dirs}"
-    dl.msg(f"Number of directories skipped because they were outside of the inclusion regex's: {msg}")
+    dl.print_msg(f"Number of directories skipped because they were outside of the inclusion regex's: {msg}")
     msg = f"{{BRIGHT_RED}}{scan_obj.skipped_exclude_dirs}"
-    dl.msg(f"Number of directories skipped because they matched the exclusion regex's: {msg}")
+    dl.print_msg(f"Number of directories skipped because they matched the exclusion regex's: {msg}")
 
     msg = f"{{BRIGHT_RED}}{scan_obj.skipped_include_files}"
-    dl.msg(f"Number of files skipped because they were outside of the inclusion regex's: {msg}")
+    dl.print_msg(f"Number of files skipped because they were outside of the inclusion regex's: {msg}")
     msg = f"{{BRIGHT_RED}}{scan_obj.skipped_exclude_files}"
-    dl.msg(f"Number of files skipped because they matched the exclusion regex's: {msg}")
+    dl.print_msg(f"Number of files skipped because they matched the exclusion regex's: {msg}")
 
-    dl.msg(f"{{BRIGHT_CYAN}}Number of files accumulated: {{BRIGHT_RED}}{scan_obj.initial_count}")
+    dl.print_msg(f"{{BRIGHT_CYAN}}Number of files accumulated: {{BRIGHT_RED}}{scan_obj.initial_count}")
     diff = datetime.datetime.now() - start_time
     delta = str(datetime.timedelta(seconds=diff.seconds))
     hours = f"{delta.split(':')[0]} hours"
     minutes = f"{delta.split(':')[1]} minutes"
     seconds = f"{delta.split(':')[2]} seconds"
-    dl.msg(f"Total scan time: {{BRIGHT_YELLOW}}{hours}, {minutes}, {seconds}")
+    dl.print_msg(f"Total scan time: {{BRIGHT_YELLOW}}{hours}, {minutes}, {seconds}")
 
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -148,33 +158,29 @@ def do_scan(session_obj,
     :return: True if a scan is left to run to its end. False if the user interrupts it using ctrl-c
     """
 
-    dl.msg(f"\n\n{{BRIGHT_GREEN}}{scan_type_name.upper()} DIRECTORY")
-    dl.msg("=" * 80)
+    dl.print_msg(f"\n\n{{BRIGHT_GREEN}}{scan_type_name.upper()} DIRECTORY")
+    dl.print_msg("=" * 80)
 
     try:
         if scan_type_is_query:
-            try:
-                for counter in session_obj.do_query_scan():
+            for counter in session_obj.do_query_scan():
 
-                    skip_files_count = session_obj.query_scan.skipped_exclude_files
-                    skip_files_count = skip_files_count + session_obj.query_scan.skipped_include_files
-                    skip_files_count = skip_files_count + session_obj.query_scan.skipped_hidden_files
-                    skip_files_count = skip_files_count + session_obj.query_scan.skipped_links
-                    skip_files_count = skip_files_count + session_obj.query_scan.skipped_zero_len
+                skip_files_count = session_obj.query_scan.skipped_exclude_files
+                skip_files_count = skip_files_count + session_obj.query_scan.skipped_include_files
+                skip_files_count = skip_files_count + session_obj.query_scan.skipped_hidden_files
+                skip_files_count = skip_files_count + session_obj.query_scan.skipped_links
+                skip_files_count = skip_files_count + session_obj.query_scan.skipped_zero_len
 
-                    skip_dirs_count = session_obj.query_scan.skipped_exclude_dirs
-                    skip_dirs_count = skip_dirs_count + session_obj.query_scan.skipped_include_dirs
-                    skip_dirs_count = skip_dirs_count + session_obj.query_scan.skipped_hidden_dirs
+                skip_dirs_count = session_obj.query_scan.skipped_exclude_dirs
+                skip_dirs_count = skip_dirs_count + session_obj.query_scan.skipped_include_dirs
+                skip_dirs_count = skip_dirs_count + session_obj.query_scan.skipped_hidden_dirs
 
-                    scan_msg = f"Files scanned so far: {counter}"
-                    err_files_msg = dl.format_string(f"Errors: {{BRIGHT_RED}}{session_obj.query_scan.error_count}")
-                    skip_files_msg = dl.format_string(f"Skipped Files: {{BRIGHT_RED}}{skip_files_count}")
-                    skip_dirs_msg = dl.format_string(f"Skipped Dirs: {{BRIGHT_RED}}{skip_dirs_count}")
+                scan_msg = f"Files scanned so far: {counter}"
+                err_files_msg = dl.format_string(f"Errors: {{BRIGHT_RED}}{session_obj.query_scan.error_count}")
+                skip_files_msg = dl.format_string(f"Skipped Files: {{BRIGHT_RED}}{skip_files_count}")
+                skip_dirs_msg = dl.format_string(f"Skipped Dirs: {{BRIGHT_RED}}{skip_dirs_count}")
 
-                    dl.display_refreshable_message(f"{scan_msg}   {err_files_msg}   {skip_files_msg}   {skip_dirs_msg}")
-            except IOError as e:
-                dl.msg(f"{{BRIGHT_RED}}ERROR:{{COLOR_NONE}} {str(e)}")
-                sys.exit(1)
+                dl.print_refreshable_msg(f"{scan_msg}   {err_files_msg}   {skip_files_msg}   {skip_dirs_msg}")
 
         else:
             try:
@@ -195,14 +201,14 @@ def do_scan(session_obj,
                     skip_files_msg = dl.format_string(f"Skipped Files: {{BRIGHT_RED}}{skip_files_count}")
                     skip_dirs_msg = dl.format_string(f"Skipped Dirs: {{BRIGHT_RED}}{skip_dirs_count}")
 
-                    dl.display_refreshable_message(f"{scan_msg}   {err_files_msg}   {skip_files_msg}   {skip_dirs_msg}")
+                    dl.print_refreshable_msg(f"{scan_msg}   {err_files_msg}   {skip_files_msg}   {skip_dirs_msg}")
             except IOError as e:
-                dl.msg(f"{{BRIGHT_RED}}ERROR:{{COLOR_NONE}} {str(e)}")
+                dl.print_msg(f"{{BRIGHT_RED}}ERROR:{{COLOR_NONE}} {str(e)}")
                 sys.exit(1)
     except KeyboardInterrupt:
         return False
 
-    dl.display_refreshable_message(" " * 80)
+    dl.print_refreshable_msg(" " * 80)
     dl.finish_refreshable_message()
 
     return True
@@ -222,13 +228,13 @@ def parse_commandline():
         parser_obj.validate()
     except (FileNotFoundError, NotADirectoryError, PermissionError) as e:
         msg = f"{{RED}}Error:{{COLOR_NONE}} {e}"
-        dl.msg(msg)
+        dl.print_msg(msg)
         sys.exit(1)
     except FileExistsError as e:
         msg = f"{{YELLOW}}Warning:{{COLOR_NONE}} {e}"
-        dl.msg(msg)
-        result = dl.multiple_choice_user_input("Overwrite file?",
-                                               legal_answers=["Y", "N"])
+        dl.print_msg(msg)
+        result = dl.mult_choice_input("Overwrite file?",
+                                      legal_answers=["Y", "N"])
         if result in ["N"]:
             sys.exit(0)
             
@@ -300,8 +306,8 @@ def compare_files(session_obj,
         Nothing.
     """
 
-    dl.msg(f"\n\n{{BRIGHT_YELLOW}}COMPARING FILES:")
-    dl.msg("=" * 80)
+    dl.print_msg(f"\n\n{{BRIGHT_YELLOW}}COMPARING FILES:")
+    dl.print_msg("=" * 80)
 
     old_percent = 0
     try:
@@ -325,7 +331,7 @@ def compare_files(session_obj,
     except KeyboardInterrupt:
         sys.exit(0
                  )
-    dl.msg("\n")
+    dl.print_msg("\n")
 
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -340,16 +346,32 @@ def display_summary(args):
         Nothing.
     """
 
-    dl.msg("\n\n{{BRIGHT_GREEN}}SUMMARY")
-    dl.msg("=" * 80)
+    dl.print_msg("\n\n{{BRIGHT_GREEN}}SUMMARY")
+    dl.print_msg("=" * 80)
 
     canonical_d = os.path.abspath(args.canonical_dir)
 
     str_len = 38
 
-    for i, query_d in enumerate(args.query_dir):
-        dl.msg(f"Query directory {i + 1}:".rjust(str_len), f"{{BRIGHT_YELLOW}}{os.path.abspath(query_d)}")
-    dl.msg(" Canonical directory:".rjust(str_len), f"{{BRIGHT_YELLOW}}{canonical_d}")
+    query_dirs = list()
+    query_files = list()
+    for item in args.query_dir:
+        if os.path.isdir(item):
+            query_dirs.append(item)
+        else:
+            query_files.append(item)
+
+    for i, query_d in enumerate(query_dirs):
+        dl.print_msg(f"Query directory {i + 1}:".rjust(str_len), f"{{BRIGHT_YELLOW}}{os.path.abspath(query_d)}")
+
+    if len(query_files) > 0:
+        if len(query_files) < 5:
+            for i, query_file in enumerate(query_files):
+                dl.print_msg(f"Query file {i + 1}:".rjust(str_len), f"{{BRIGHT_YELLOW}}{os.path.abspath(query_file)}")
+        else:
+            dl.print_msg(f"Query file count:".rjust(str_len), f"{{BRIGHT_YELLOW}}{len(query_files)}")
+
+    dl.print_msg(" Canonical directory:".rjust(str_len), f"{{BRIGHT_YELLOW}}{canonical_d}")
 
     if args.output_file is not None:
         output_file = os.path.abspath(args.output_file)
@@ -357,79 +379,74 @@ def display_summary(args):
     else:
         output_file_display = "{{BRIGHT_RED}}NO OUTPUT LOG FILE. QUERY RESULTS WILL ONLY BE DISPLAYED ON SCREEN."
 
-    dl.msg("Output log:".rjust(str_len),
-           output_file_display)
+    dl.print_msg("Output log:".rjust(str_len), output_file_display)
 
-    dl.msg("\n")
-    dl.msg(f"{{BRIGHT_GREEN}}QUERY ITEMS".rjust(52))
-    dl.msg("Skip query sub-directories:".rjust(str_len),
-           dl.format_boolean(args.query_skip_sub_dir))
-    dl.msg("Skip hidden query files:".rjust(str_len),
-           dl.format_boolean(not args.query_include_hidden))
-    dl.msg("Skip hidden query subdirectories:".rjust(str_len),
-           dl.format_boolean(args.query_skip_hidden_dirs))
-    dl.msg("Skip zero length query files:".rjust(str_len),
-           dl.format_boolean(not args.query_include_zero_length))
+    dl.print_msg("\n")
+    dl.print_msg(f"{{BRIGHT_GREEN}}QUERY ITEMS".rjust(52))
+    dl.print_msg("Skip query sub-directories:".rjust(str_len), dl.format_boolean(args.query_skip_sub_dir))
+    dl.print_msg("Skip hidden query files:".rjust(str_len), dl.format_boolean(not args.query_include_hidden))
+    dl.print_msg("Skip hidden query subdirectories:".rjust(str_len), dl.format_boolean(args.query_skip_hidden_dirs))
+    dl.print_msg("Skip zero length query files:".rjust(str_len), dl.format_boolean(not args.query_include_zero_length))
     if args.query_incl_dir_regexes is not None:
-        dl.msg("Include query sub-dir regex:".rjust(str_len), ", ".join(args.query_incl_dir_regexes))
+        dl.print_msg("Include query sub-dir regex:".rjust(str_len), ", ".join(args.query_incl_dir_regexes))
     else:
-        dl.msg("Include query sub-dir regex:".rjust(str_len), "")
+        dl.print_msg("Include query sub-dir regex:".rjust(str_len), "")
     if args.query_excl_dir_regexes is not None:
-        dl.msg("Exclude query sub-dir regex:".rjust(str_len), ", ".join(args.query_excl_dir_regexes))
+        dl.print_msg("Exclude query sub-dir regex:".rjust(str_len), ", ".join(args.query_excl_dir_regexes))
     else:
-        dl.msg("Exclude query sub-dir regex:".rjust(str_len), "")
+        dl.print_msg("Exclude query sub-dir regex:".rjust(str_len), "")
     if args.query_incl_file_regexes is not None:
-        dl.msg("Include query file regex:".rjust(str_len), ", ".join(args.query_incl_file_regexes))
+        dl.print_msg("Include query file regex:".rjust(str_len), ", ".join(args.query_incl_file_regexes))
     else:
-        dl.msg("Include query file regex:".rjust(str_len), "")
+        dl.print_msg("Include query file regex:".rjust(str_len), "")
     if args.query_excl_file_regexes is not None:
-        dl.msg("Exclude query file regex:".rjust(str_len), ", ".join(args.query_excl_file_regexes))
+        dl.print_msg("Exclude query file regex:".rjust(str_len), ", ".join(args.query_excl_file_regexes))
     else:
-        dl.msg("Exclude query file regex:".rjust(str_len), "")
+        dl.print_msg("Exclude query file regex:".rjust(str_len), "")
 
-    dl.msg("\n")
-    dl.msg("{{BRIGHT_GREEN}}CANONICAL DIRECTORY".rjust(54))
-    dl.msg("Skip canonical sub-directories:".rjust(str_len),
-           dl.format_boolean(args.canonical_skip_sub_dir))
-    dl.msg("Skip hidden canonical files:".rjust(str_len),
-           dl.format_boolean(not args.canonical_include_hidden))
-    dl.msg("Skip hidden canonical subdirectories:".rjust(str_len),
-           dl.format_boolean(args.canonical_skip_hidden_dirs))
-    dl.msg("Skip zero length canonical files:".rjust(str_len),
-           dl.format_boolean(not args.canonical_include_zero_length))
+    dl.print_msg("\n")
+    dl.print_msg("{{BRIGHT_GREEN}}CANONICAL DIRECTORY".rjust(54))
+    dl.print_msg("Skip canonical sub-directories:".rjust(str_len),
+                 dl.format_boolean(args.canonical_skip_sub_dir))
+    dl.print_msg("Skip hidden canonical files:".rjust(str_len),
+                 dl.format_boolean(not args.canonical_include_hidden))
+    dl.print_msg("Skip hidden canonical subdirectories:".rjust(str_len),
+                 dl.format_boolean(args.canonical_skip_hidden_dirs))
+    dl.print_msg("Skip zero length canonical files:".rjust(str_len),
+                 dl.format_boolean(not args.canonical_include_zero_length))
     if args.canonical_incl_dir_regexes is not None:
-        dl.msg("Include canonical sub-dir regex:".rjust(str_len), ", ".join(args.canonical_incl_dir_regexes))
+        dl.print_msg("Include canonical sub-dir regex:".rjust(str_len), ", ".join(args.canonical_incl_dir_regexes))
     else:
-        dl.msg("Include canonical sub-dir regex:".rjust(str_len), "")
+        dl.print_msg("Include canonical sub-dir regex:".rjust(str_len), "")
     if args.canonical_excl_dir_regexes is not None:
-        dl.msg("Exclude canonical sub-dir regex:".rjust(str_len), ", ".join(args.canonical_excl_dir_regexes))
+        dl.print_msg("Exclude canonical sub-dir regex:".rjust(str_len), ", ".join(args.canonical_excl_dir_regexes))
     else:
-        dl.msg("Exclude canonical sub-dir regex:".rjust(str_len), "")
+        dl.print_msg("Exclude canonical sub-dir regex:".rjust(str_len), "")
     if args.canonical_incl_file_regexes is not None:
-        dl.msg("Include canonical file regex:".rjust(str_len), ", ".join(args.canonical_incl_file_regexes))
+        dl.print_msg("Include canonical file regex:".rjust(str_len), ", ".join(args.canonical_incl_file_regexes))
     else:
-        dl.msg("Include canonical file regex:".rjust(str_len), "")
+        dl.print_msg("Include canonical file regex:".rjust(str_len), "")
     if args.canonical_excl_file_regexes is not None:
-        dl.msg("Exclude canonical file regex:".rjust(str_len), ", ".join(args.canonical_excl_file_regexes))
+        dl.print_msg("Exclude canonical file regex:".rjust(str_len), ", ".join(args.canonical_excl_file_regexes))
     else:
-        dl.msg("Exclude canonical file regex:".rjust(str_len), "")
+        dl.print_msg("Exclude canonical file regex:".rjust(str_len), "")
 
-    dl.msg("\n")
-    dl.msg(f"{{BRIGHT_GREEN}}COMPARISON SETTINGS".rjust(52))
-    dl.msg("Names must match:".rjust(str_len),
-           dl.format_boolean(args.match_on_name))
-    dl.msg("File extensions must match:".rjust(str_len),
-           dl.format_boolean(args.match_on_type))
-    dl.msg("Parent directory name must match:".rjust(str_len),
-           dl.format_boolean(args.match_on_parent))
-    dl.msg("Relative paths must match:".rjust(str_len),
-           dl.format_boolean(args.match_on_relpath))
-    dl.msg("Creation date and time must match:".rjust(str_len),
-           dl.format_boolean(args.match_on_ctime))
-    dl.msg("Modification date and time must match:".rjust(str_len),
-           dl.format_boolean(args.match_on_mtime))
-    dl.msg("Do checksum:".rjust(str_len),
-           dl.format_boolean(not args.skip_checksum))
+    dl.print_msg("\n")
+    dl.print_msg(f"{{BRIGHT_GREEN}}COMPARISON SETTINGS".rjust(52))
+    dl.print_msg("Names must match:".rjust(str_len),
+                 dl.format_boolean(args.match_on_name))
+    dl.print_msg("File extensions must match:".rjust(str_len),
+                 dl.format_boolean(args.match_on_type))
+    dl.print_msg("Parent directory name must match:".rjust(str_len),
+                 dl.format_boolean(args.match_on_parent))
+    dl.print_msg("Relative paths must match:".rjust(str_len),
+                 dl.format_boolean(args.match_on_relpath))
+    dl.print_msg("Creation date and time must match:".rjust(str_len),
+                 dl.format_boolean(args.match_on_ctime))
+    dl.print_msg("Modification date and time must match:".rjust(str_len),
+                 dl.format_boolean(args.match_on_mtime))
+    dl.print_msg("Do checksum:".rjust(str_len),
+                 dl.format_boolean(not args.skip_checksum))
 
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -451,8 +468,25 @@ def main():
     if args.match_on_mtime:
         options += "m"
 
-    session_obj = Session(query_items=args.query_dir,
-                          canonical_dir=args.canonical_dir,
+    query_items = list()
+    error = False
+    for item in args.query_dir:
+        item = os.path.abspath(item)
+        if not os.path.exists(item):
+            dl.print_msg(f"{{BRIGHT_RED}}Error: {{COLOR_NONE}}{item}{{BRIGHT_RED}} is not a valid path.")
+            error = True
+        query_items.append(os.path.abspath(item))
+
+    canonical_dir = os.path.abspath(args.canonical_dir)
+    if not os.path.isdir(canonical_dir):
+        dl.print_msg(f"{{BRIGHT_RED}}Error: {{COLOR_NONE}}{canonical_dir}{{BRIGHT_RED}} is not a valid path.")
+        error = True
+
+    if error:
+        sys.exit(NOT_VALID_PATH_ERROR)
+
+    session_obj = Session(query_items=query_items,
+                          canonical_dir=canonical_dir,
                           query_skip_sub_dir=args.query_skip_sub_dir,
                           query_skip_hidden_files=not args.query_include_hidden,
                           query_skip_hidden_dirs=args.query_skip_hidden_dirs,
@@ -472,11 +506,11 @@ def main():
                           report_frequency=10)
 
     display_summary(args=args)
-    result = dl.multiple_choice_user_input("Do compare? Yes/No/Quit",
-                                           legal_answers=["Y", "N", "Q"],
-                                           alternate_legal_answers={"YES": "Y", "NO": "N", "QUIT": "Q"},
-                                           default="Y",
-                                           blank_lines=2)
+    result = dl.mult_choice_input("Do compare? Yes/No/Quit",
+                                  legal_answers=["Y", "N", "Q"],
+                                  alternate_legal_answers={"YES": "Y", "NO": "N", "QUIT": "Q"},
+                                  default="Y",
+                                  blank_lines=2)
     if result in {"Q", "N"}:
         sys.exit(0)
 
@@ -487,8 +521,8 @@ def main():
     compare_files(session_obj, args)
 
     # ----------------------------------------------------------------------------------------------------------------------
-    dl.msg("\n\n{{BRIGHT_GREEN}}RESULTS:")
-    dl.msg("=" * 80)
+    dl.print_msg("\n\n{{BRIGHT_GREEN}}RESULTS:")
+    dl.print_msg("=" * 80)
 
     num_files_checked = f"{{BRIGHT_RED}}{len(session_obj.query_scan.files)}"
     num_duplicates = f"{{BRIGHT_RED}}{len(session_obj.actual_matches)}"
@@ -496,25 +530,28 @@ def main():
     num_reused_checksum = f"{{BRIGHT_RED}}{session_obj.pre_computed_checksum_count}"
     num_self = f"{{BRIGHT_RED}}{len(session_obj.skipped_self)}"
 
-    dl.msg(f"Number of files checked: {num_files_checked}")
-    dl.msg(f"{{BRIGHT_CYAN}}Number of query files that are duplicates of canonical files: {num_duplicates}")
-    dl.msg(f"{{BRIGHT_CYAN}}Number of query files that have no duplicates in canonical dir: {num_unique}")
-    dl.msg(f"Number of times a file was compared with itself: {num_self}")
+    dl.print_msg(f"Number of files checked: {num_files_checked}")
+    dl.print_msg(f"{{BRIGHT_CYAN}}Number of query files that are duplicates of canonical files: {num_duplicates}")
+    dl.print_msg(f"{{BRIGHT_CYAN}}Number of query files that have no duplicates in canonical dir: {num_unique}")
+    dl.print_msg(f"Number of times a file was compared with itself: {num_self}")
     if not args.skip_checksum:
-        dl.msg(f"Number of times a checksum was reused: {num_reused_checksum}")
+        dl.print_msg(f"Number of times a checksum was reused: {num_reused_checksum}")
     diff = datetime.datetime.now() - then
     delta = str(datetime.timedelta(seconds=diff.seconds))
     hours = f"{delta.split(':')[0]} hours"
     minutes = f"{delta.split(':')[1]} minutes"
     seconds = f"{delta.split(':')[2]} seconds"
-    dl.msg(f"Total compare time: {{BRIGHT_YELLOW}}{hours}, {minutes}, {seconds}")
+    dl.print_msg(f"Total compare time: {{BRIGHT_YELLOW}}{hours}, {minutes}, {seconds}")
 
     if args.output_file:
         with open(args.output_file, "w") as f:
-            f.write(f"{options}\n")
-            f.write(f"{DELIMITER.join(args.query_dir)}\n")
-            f.write(f"{os.path.abspath(args.canonical_dir)}\n")
-            f.write(f"{len(session_obj.actual_matches.items())}\n")
+            f.write(f"options={options}\n")
+            for i, item in enumerate(args.query_dir):
+                if os.path.isdir(os.path.abspath(item)):
+                    f.write(f"querydir{i}={item}\n")
+            f.write(f"canonicaldir={os.path.abspath(args.canonical_dir)}\n")
+            f.write(f"num_matches={len(session_obj.actual_matches.items())}\n")
+            f.write(f"num_unique={len(session_obj.unique)}\n")
             for file_path, matches in session_obj.actual_matches.items():
                 output = list()
                 output.append("D")
@@ -525,7 +562,7 @@ def main():
             for file_path in session_obj.unique:
                 output = list()
                 output.append("U")
-                output.append(file_path)
+                output.append(os.path.abspath(file_path))
                 f.write(f"{DELIMITER.join(output)}\n")
             for file_path in session_obj.source_error_files:
                 output = list()
@@ -543,29 +580,35 @@ def main():
     both = "{{BRIGHT_YELLOW}}B{{COLOR_NONE}}oth"
     quitapp = "{{BRIGHT_YELLOW}}Q{{COLOR_NONE}}uit"
     prompt = dl.format_string(f"Display the {matching}, {unique}, {both}, or {quitapp}?")
-    result = dl.multiple_choice_user_input(prompt,
-                                           legal_answers=["M", "U", "B", "Q"],
-                                           default="B",
-                                           blank_lines=2)
+    result = dl.mult_choice_input(prompt,
+                                  legal_answers=["M", "U", "B", "Q"],
+                                  default="B",
+                                  blank_lines=2)
     if result in {"Q"}:
         sys.exit(0)
 
     if result in {"M", "B"}:
-        dl.msg("\n\n{{BRIGHT_GREEN}}MATCHES")
-        dl.msg("=" * 80)
+        dl.print_msg("\n\n{{BRIGHT_GREEN}}MATCHES")
+        dl.print_msg("=" * 80)
 
-        for file_path, matches in session_obj.actual_matches.items():
-            dl.msg(file_path)
-            for match in matches:
-                dl.msg(f"{{BRIGHT_CYAN}}{match}")
-            dl.msg("\n\n")
+        if args.print_delete:
+            for file_path, matches in session_obj.actual_matches.items():
+                file_path = file_path.replace(' ', '\ ')
+                dl.print_msg(f"rm {file_path}")
+        else:
+            for file_path, matches in session_obj.actual_matches.items():
+                dl.print_msg(file_path)
+                for match in matches:
+                    match = match.replace(" ", "\ ")
+                    dl.print_msg(f"{{BRIGHT_CYAN}}{match}")
+                dl.print_msg("\n\n")
 
     if result in {"U", "B"}:
-        dl.msg("\n\n{{BRIGHT_RED}}FILES IN QUERY DIR THAT HAVE NO DUPLICATES IN CANONICAL DIR")
-        dl.msg("=" * 80)
+        dl.print_msg("\n\n{{BRIGHT_RED}}FILES IN QUERY DIR THAT HAVE NO DUPLICATES IN CANONICAL DIR")
+        dl.print_msg("=" * 80)
 
         for file_path in session_obj.unique:
-            dl.msg(file_path)
+            dl.print_msg(file_path.replace(" ", "\ "))
 
 
 main()

@@ -294,6 +294,13 @@ class Parser(object):
                                  action="store",
                                  help=help_str)
 
+        help_str = "Print duplicates with delete command. Instead of just printing the duplicate files, print them " \
+                   "with an 'rm' preceding them."
+        self.parser.add_argument("-D",
+                                 dest="print_delete",
+                                 action="store_true",
+                                 help=help_str)
+
         self.args = self.parser.parse_args(commandline_args)
 
     # ------------------------------------------------------------------------------------------------------------------
