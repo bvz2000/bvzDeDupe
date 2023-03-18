@@ -547,7 +547,8 @@ def main():
         with open(args.output_file, "w") as f:
             f.write(f"options={options}\n")
             for i, item in enumerate(args.query_dir):
-                if os.path.isdir(os.path.abspath(item)):
+                item = os.path.abspath(item)
+                if os.path.isdir(item):
                     f.write(f"querydir{i}={item}\n")
             f.write(f"canonicaldir={os.path.abspath(args.canonical_dir)}\n")
             f.write(f"num_matches={len(session_obj.actual_matches.items())}\n")
