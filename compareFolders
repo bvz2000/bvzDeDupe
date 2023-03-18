@@ -4,7 +4,7 @@ import datetime
 import os.path
 import sys
 
-from bvzcomparedirs.comparesession import Session
+from bvzos.compare import Session
 from bvzdisplaylib import displaylib as dl
 
 from src.parsercompare import Parser
@@ -12,6 +12,7 @@ from src.parsercompare import Parser
 DELIMITER = "@COMPAREFOLDERS@"
 
 NOT_VALID_PATH_ERROR = 1
+
 
 # ----------------------------------------------------------------------------------------------------------------------
 def display_scan_errors(scan_obj,
