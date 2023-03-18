@@ -6,12 +6,9 @@ import sys
 from typing import Set, Tuple
 
 from bvzdisplaylib import displaylib as dl
+from bvzcomparefiles import comparefiles
 
 from src.parserdelete import Parser
-from bvzscanfilesystem.scanfiles import ScanFiles
-from bvzcomparedirs.canonicalfiles import CanonicalFiles
-
-from bvzcomparedirs import comparesession
 
 # Set to true when debugging if you don't want to actually really delete or rename. Same as using the -T option, but
 # this forces that on regardless of whether you remember to use it or not. Should be False for actual use.
@@ -62,55 +59,64 @@ def read_raw_log_file(log_file_p) -> list:
             lines = log_f.readlines()
     except FileNotFoundError:
         msg = f"{{RED}}Error:{{COLOR_NONE}} Unable to find log file: {log_file_p}"
-        displaylib.display_message(msg)
+        dl.print_msg(msg)
         sys.exit(EXIT_LOG_FILE_NOT_FOUND)
     except PermissionError:
         msg = f"{{RED}}Error:{{COLOR_NONE}} You do not have permission to read log file: {log_file_p}"
-        displaylib.display_message(msg)
+        dl.print_msg(msg)
         sys.exit(EXIT_LOG_FILE_NO_PERMISSION)
 
     return lines
 
 
 # ----------------------------------------------------------------------------------------------------------------------
-def read_log_file_header(lines) -> Tuple[dict, str, str, int]:
+def read_log_file_header(lines) -> Tuple[dict, list, str, int, int, int]:
     """
     Reads the header of the log file to extract metadata
 
-    :param lines: The list of all lines in the log file. This is the raw file as read by the file.readlines() method.
+    :param lines:
+        The list of all lines in the log file. This is the raw file as read by the file.readlines() method.
 
-    :return: A tuple containing the header data.
+    :return:
+        A tuple containing the header data (options as dict, query directories as list, canonical directory as string,
+        number of matches as int, number of unique as int, first line of log data as int.
     """
 
-    try:
-        raw_options = lines[0].rstrip("\n")
-        query_d = lines[1].rstrip("\n")
-        canonical_d = lines[2].rstrip("\n")
-        try:
-            dupe_count = int(lines[3].rstrip("\n"))
-        except ValueError:
-            msg = f"{{RED}}Error:{{COLOR_NONE}} Log file has a malformed header. Duplicate Count is not an integer."
-            displaylib.display_message(msg)
-            sys.exit(EXIT_MALFORMED_HEADER)
-    except IndexError:
-        msg = f"{{RED}}Error:{{COLOR_NONE}} Log file has a malformed header. Missing values."
-        displaylib.display_message(msg)
-        sys.exit(EXIT_MALFORMED_HEADER)
+    raw_options = ""
+    query_dirs = list()
+    canonical_d = ""
+    num_matches = 0
+    num_unique = 0
+    log_line = 0
 
-    if not os.path.exists(query_d):
-        msg = f"{{RED}}Error:{{COLOR_NONE}} The query directory in log file header does not exist: {query_d}."
-        displaylib.display_message(msg)
-        sys.exit(EXIT_MALFORMED_HEADER)
+    for log_line, line in enumerate(lines):
+        if line.startswith("options="):
+            raw_options = line.rstrip("\n").split("=")[1]
+        if line.startswith("querydir"):
+            query_dirs.append(line.rstrip("\n").split("=")[1])
+        if line.startswith("canonicaldir="):
+            canonical_d = line.rstrip("\n").split("=")[1]
+        if line.startswith("num_matches="):
+            num_matches = line.rstrip("\n").split("=")[1]
+        if line.startswith("num_unique="):
+            num_unique = line.rstrip("\n").split("=")[1]
+            break  # -> every line after this is log data
+
+    for query_d in query_dirs:
+        if not os.path.exists(query_d):
+            msg = f"{{RED}}Error:{{COLOR_NONE}} The query directory in log file header does not exist: {query_d}."
+            dl.print_msg(msg)
+            sys.exit(EXIT_MALFORMED_HEADER)
 
     if not os.path.exists(canonical_d):
         msg = f"{{RED}}Error:{{COLOR_NONE}} The canonical directory in log file header does not exist: {canonical_d}."
-        displaylib.display_message(msg)
+        dl.print_msg(msg)
         sys.exit(EXIT_MALFORMED_HEADER)
 
     for char in raw_options:
         if char not in "ntprcm":
             msg = f"{{RED}}Error:{{COLOR_NONE}} Illegal comparison operator in log file header: {char}."
-            displaylib.display_message(msg)
+            dl.print_msg(msg)
             sys.exit(EXIT_MALFORMED_HEADER)
 
     options = dict()
@@ -121,7 +127,7 @@ def read_log_file_header(lines) -> Tuple[dict, str, str, int]:
     options["match_on_ctime"] = "c" in raw_options
     options["match_on_mtime"] = "m" in raw_options
 
-    return options, query_d, canonical_d, dupe_count
+    return options, query_dirs, canonical_d, num_matches, num_unique, log_line + 1
 
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -137,10 +143,12 @@ def process_log(lines) -> Set[tuple]:
     process_lines = set()
     count = len(lines)
     i = 0
+
     try:
         for i, line in enumerate(lines):
             msg = f"Pre-Processing {i} of {count} - {{BRIGHT_YELLOW}}No files are being altered right now."
-            displaylib.display_refreshable_message(msg)
+            if i % 10 == 0:
+                dl.print_refreshable_msg(msg)
             line_split = tuple(line.rstrip("\n").split(DELIMITER))
             if line_split[0] == "D":
                 process_lines.add(line_split)
@@ -148,23 +156,60 @@ def process_log(lines) -> Set[tuple]:
             raise IndexError
 
     except IndexError:
-        displaylib.display_message("There are no duplicate files in the given log file.")
+        dl.print_msg("There are no duplicate files in the given log file.")
         sys.exit(EXIT_OK)
 
     except KeyboardInterrupt:
-        displaylib.flush_refreshable_message()
+        dl.flush_refreshable_msg()
         msg = f"Pre-Processing {i} of {count} - No files are being altered right now."
-        displaylib.display_message(msg)
-        displaylib.display_message("Operation canceled by user.")
+        dl.print_msg(msg)
+        dl.print_msg("Operation canceled by user.")
         sys.exit(EXIT_OK)
+
+    dl.flush_refreshable_msg()
+    dl.finish_refreshable_message()
 
     return process_lines
 
 
 # ----------------------------------------------------------------------------------------------------------------------
+def display_errors(errors):
+    """
+    Displays the list of errors.
+
+    :param errors: The list of errors.
+
+    :return: Nothing.
+    """
+
+    if len(errors) == 0:
+        return
+
+    error_file_p = os.path.expanduser(os.path.join("~", "deleteFiles_errors.log"))
+    with open(error_file_p, "w") as log_f:
+        for item in errors:
+            log_f.write(f"{item[0]},{item[1]},{item[2]}")
+
+    msg = f"\n\n{{BRIGHT_RED}}There were errors trying to rename or delete files."
+    dl.print_msg(msg)
+    msg = "Do you want to view the errors? (Y/N) "
+    result = ""
+    while result.upper() not in ["Y", "YES", "N", "NO"]:
+        result = input(msg)
+
+    if result.upper() in ["Y", "YES"]:
+        dl.print_msg("\n\n")
+        for item in errors:
+            print(f"{item[2]}  ->  {item[0]}")
+
+    dl.print_msg("\n\n")
+    dl.print_msg(f"Error file written to: {error_file_p}")
+
+
+# ----------------------------------------------------------------------------------------------------------------------
 def rename_file(query_p,
                 trial,
-                silent_trial,
+                quiet_trial,
                 prefix="compareFoldersPendingDelete"):
     """
     Rename a query file.
@@ -172,7 +217,7 @@ def rename_file(query_p,
     :param query_p: The full path to the file being renamed.
     :param trial: Whether to do a trial run instead of actually renaming.
     :param prefix: The prefix to prepend to the name. Defaults to "compareFoldersPendingDelete"
-    :param silent_trial: Whether to suppress any progress information during a trial run.
+    :param quiet_trial: Whether to suppress any progress information during a trial run.
 
     :return: Nothing.
     """
@@ -192,20 +237,22 @@ def rename_file(query_p,
         except PermissionError:
             raise ValueError(f"Permission error trying to rename: {query_p}")
     else:
-        if not silent_trial:
+        if not quiet_trial:
+            query_p = query_p.replace(" ", "\ ")
+            file_n = file_n.replace(" ", "\ ")
             print(f"mv {query_p} {file_n}")
 
 
 # ----------------------------------------------------------------------------------------------------------------------
 def delete_file(query_p,
                 trial,
-                silent_trial):
+                quiet_trial):
     """
     Rename a query file.
 
     :param query_p: The full path to the file being renamed.
     :param trial: Whether to do a trial run instead of actually renaming.
-    :param silent_trial: Whether to suppress any progress information during a trial run.
+    :param quiet_trial: Whether to suppress any progress information during a trial run.
 
     :return: Nothing.
     """
@@ -218,26 +265,29 @@ def delete_file(query_p,
         except PermissionError:
             raise ValueError(f"Permission error trying to delete: {query_p}")
     else:
-        if not silent_trial:
+        if not quiet_trial:
+            query_p = query_p.replace(" ", "\ ")
             print(f"rm {query_p}")
 
 
 # ----------------------------------------------------------------------------------------------------------------------
 def delete_or_rename_file(query_p,
                           canonical_p,
-                          options,
-                          parser_obj,
-                          query_scandir_obj,
-                          canonical_scandir_obj):
+                          do_rename,
+                          trial,
+                          quiet_trial,
+                          skip_checksum,
+                          options):
     """
     Deletes or renames a specific file.
 
     :param query_p: The path to the query file.
     :param canonical_p: The path to the canonical file.
+    :param do_rename: Whether to rename the files instead of deleting them.
+    :param trial: Do not actually run the rename or delete operation.
+    :param quiet_trial: If running a trial, do not print out debug info.
+    :param skip_checksum: Skip the checksum.
     :param options: A dictionary of which options to do a comparison on.
-    :param parser_obj: The parser object.
-    :param query_scandir_obj: The query scandir object.
-    :param canonical_scandir_obj: The canonical scandir object.
 
     :return: Nothing.
     """
@@ -245,11 +295,11 @@ def delete_or_rename_file(query_p,
     if not os.path.exists(query_p):
         return
 
-    query_metadata = query_scandir_obj.get_metadata(query_p)
-    canonical_metadata = canonical_scandir_obj.get_metadata(canonical_p)
-
     if not os.path.exists(canonical_p):
         raise(ValueError("Canonical file is missing"))
+
+    query_metadata = comparefiles.get_metadata(query_p, os.path.sep)
+    canonical_metadata = comparefiles.get_metadata(canonical_p, os.path.sep)
 
     if query_metadata["size"] != canonical_metadata["size"]:
         raise(ValueError("Sizes do not match"))
@@ -272,137 +322,103 @@ def delete_or_rename_file(query_p,
     if options["match_on_mtime"] and query_metadata["mtime"] != canonical_metadata["mtime"]:
         raise(ValueError("Modification date and times do not match"))
 
-    if parser_obj.args.checksum:
-        if not comparefiles.md5_full_match(query_p, canonical_p):
+    if not skip_checksum:
+        checksum = comparefiles.compare(query_p, canonical_p)
+        if not checksum:
             raise(ValueError("Checksums do not match"))
 
-    if parser_obj.args.rename:
-        rename_file(query_p, parser_obj.args.trial, parser_obj.args.silent_trial)
+    if do_rename:
+        rename_file(query_p, trial, quiet_trial)
     else:
-        delete_file(query_p, parser_obj.args.trial, parser_obj.args.silent_trial)
-
-
-# ----------------------------------------------------------------------------------------------------------------------
-def display_errors(errors):
-    """
-    Displays the list of errors.
-
-    :param errors: The list of errors.
-
-    :return: Nothing.
-    """
-
-    if len(errors) == 0:
-        return
-
-    error_file_p = os.path.expanduser(os.path.join("~", "deleteFiles_errors.log"))
-    with open(error_file_p, "w") as log_f:
-        for item in errors:
-            log_f.write(f"{item[0]},{item[1]},{item[2]}")
-
-    msg = f"\n\n{{BRIGHT_RED}}There were errors trying to rename or delete files."
-    displaylib.display_message(msg)
-    msg = "Do you want to view the errors? (Y/N) "
-    result = ""
-    while result.upper() not in ["Y", "YES", "N", "NO"]:
-        result = input(msg)
-
-    if result.upper() in ["Y", "YES"]:
-        displaylib.display_message("\n\n")
-        for item in errors:
-            print(f"{item[2]}  ->  {item[0]}")
-
-    displaylib.display_message("\n\n")
-    displaylib.display_message(f"Error file written to: {error_file_p}")
+        delete_file(query_p, trial, quiet_trial)
 
 
 # ----------------------------------------------------------------------------------------------------------------------
 def delete_or_rename_files(duplicates,
                            options,
-                           parser_obj,
-                           query_scandir_obj,
-                           canonical_scandir_obj,
-                           count):
+                           do_rename,
+                           skip_checksum,
+                           trial,
+                           quiet_trial):
     """
     Deletes or renames the duplicate files.
 
     :param duplicates: The set of duplicates to delete or rename.
     :param options: A dictionary of which options to do a comparison on.
-    :param parser_obj: The parser object.
-    :param query_scandir_obj: The query scandir object.
-    :param canonical_scandir_obj: The canonical scandir object.
-    :param count: The total number of duplicates.
+    :param do_rename: Whether to do a rename instead of a delete operation.
+    :param skip_checksum: Skip checksum.
+    :param trial: Whether to run in trial mode.
+    :param quiet_trial: Whether to spit out diagnostics during the trial or not.
 
     :return: Nothing.
     """
 
     if ALWAYS_TRIAL:
-        parser_obj.args.trial = True
+        trial = True
+        dl.print_msg("ALWAYS_TRIAL has been set to true in the code as a debug setting. No files will be altered.")
 
-    action_past = "deleted"
-    action = "Deleting"
-    if parser_obj.args.rename:
-        action_past = "renamed"
-        action = "Renaming"
+    action_past_str = "deleted"
+    action_str = "Deleting"
+    if do_rename:
+        action_past_str = "renamed"
+        action_str = "Renaming"
 
+    count = len(duplicates)
     errors = list()
 
-    for i, duplicate in enumerate(duplicates):
+    for i, dupe_file_p in enumerate(duplicates):
 
         try:
-            msg = f"{{BRIGHT_YELLOW}}{action} file {{COLOR_NONE}}{i+1}{{BRIGHT_YELLOW}} of {{COLOR_NONE}}{count}"
 
+            msg = f"{{BRIGHT_YELLOW}}{action_str} file {{COLOR_NONE}}{i+1}{{BRIGHT_YELLOW}} of {{COLOR_NONE}}{count}"
             if len(errors) > 0:
                 msg += f"{{BRIGHT_RED}} Errors: {{COLOR_NONE}}{len(errors)}"
-
-            displaylib.display_refreshable_message(msg)
+            dl.print_refreshable_msg(msg)
 
             try:
-                query_p = duplicate[1]
-                canonical_p = duplicate[2]
+                query_p = dupe_file_p[1]
+                canonical_p = dupe_file_p[2]
             except IndexError:
-                errors.append((duplicate, "", "Index Error"))
+                errors.append((dupe_file_p, "", "Index Error"))
                 continue
 
             try:
-                delete_or_rename_file(query_p,
-                                      canonical_p,
-                                      options,
-                                      parser_obj,
-                                      query_scandir_obj,
-                                      canonical_scandir_obj)
+                delete_or_rename_file(query_p=query_p,
+                                      canonical_p=canonical_p,
+                                      do_rename=do_rename,
+                                      trial=trial,
+                                      quiet_trial=quiet_trial,
+                                      skip_checksum=skip_checksum,
+                                      options=options)
             except ValueError as e:
                 errors.append((query_p, canonical_p, str(e)))
 
         except KeyboardInterrupt:
-            displaylib.flush_refreshable_message()
+            dl.flush_refreshable_msg()
             msg = f"{{BRIGHT_YELLOW}}Processing file {{COLOR_NONE}}{i + 1} {{BRIGHT_YELLOW}} of {{COLOR_NONE}}{count}"
-            displaylib.display_message(msg)
-            displaylib.display_message(f"Operation canceled by user. {i + 1} files were {action_past}.")
+            dl.print_msg(msg)
+            dl.print_msg(f"Operation canceled by user. {i + 1} files were {action_past_str}.")
             display_errors(errors)
-            if parser_obj.args.trial:
-                displaylib.display_message(f"{{BRIGHT_GREEN}}(Trial Run Only - No Files Were Touched){{COLOR_NONE}}")
+            if trial:
+                dl.print_msg(f"{{BRIGHT_GREEN}}(Trial Run Only - No Files Were Touched){{COLOR_NONE}}")
             sys.exit(EXIT_OK)
 
-    displaylib.finish_refreshable_message()
+    dl.finish_refreshable_message()
     display_errors(errors)
 
 
 # ----------------------------------------------------------------------------------------------------------------------
 def main():
 
-    displaylib.display_message("\n\n\n")
-
     parser_obj = parse_command_line()
 
+    dl.print_msg("Reading log file...")
     lines = read_raw_log_file(parser_obj.args.log_file)
+    options, query_dirs, canonical_d, num_matches, num_unique, log_start = read_log_file_header(lines)
 
-    options, query_d, canonical_d, dupe_count = read_log_file_header(lines)
-
-    query_scandir_obj = QueryDir(query_d)
-    canonical_scandir_obj = CanonicalDir(canonical_d)
-
-    duplicates = process_log(lines[4:])
+    dl.print_msg("\nPre-processing log file...")
+    duplicates = process_log(lines[log_start:])
+    dl.print_msg("Finished pre-processing log files.")
 
     if parser_obj.args.rename:
         action = "rename"
@@ -414,7 +430,7 @@ def main():
     else:
         trial_str = f"{{BRIGHT_RED}}False{{COLOR_NONE}}. Files will actually be {action}d."
 
-    if parser_obj.args.checksum:
+    if not parser_obj.args.skip_checksum:
         checksum_str = f"{{BRIGHT_GREEN}}True{{COLOR_NONE}}. A checksum will be run on both the "
         checksum_str += f"file to be {action}d and the canonical file"
     else:
@@ -425,34 +441,35 @@ def main():
     else:
         rename_str = f"{{BRIGHT_RED}}False{{COLOR_NONE}}. Files will be deleted instead of renamed"
 
-    displaylib.display_message("=" * 80)
-    displaylib.display_message(f"Compare Folders Log File: {{BRIGHT_YELLOW}}{parser_obj.args.log_file}")
-    displaylib.display_message(f"            Rename Files: {rename_str}")
-    displaylib.display_message(f"               Trial Run: {trial_str}")
-    displaylib.display_message(f"                Checksum: {checksum_str}")
-    displaylib.display_message()
+    dl.print_msg("\n\n")
+    dl.print_msg("=" * 80)
+    dl.print_msg(f"Compare Folders Log File: {{BRIGHT_YELLOW}}{parser_obj.args.log_file}")
+    dl.print_msg(f"            Rename Files: {rename_str}")
+    dl.print_msg(f"               Trial Run: {trial_str}")
+    dl.print_msg(f"                Checksum: {checksum_str}")
+    dl.print_msg()
 
     if parser_obj.args.trial:
         trial_str = f"{{BRIGHT_GREEN}}Trial Run: No files will actually be {action}d.{{BRIGHT_YELLOW}}"
     else:
         trial_str = ""
 
-    prompt = f"{{BRIGHT_YELLOW}}About to {action} {dupe_count} files. {trial_str} Continue?{{COLOR_NONE}} (Y/N) "
-    prompt = displaylib.format_string(prompt)
-    result = ""
-
-    while result.upper() not in ["Y", "N", "YES", "NO"]:
-        result = input(prompt)
+    prompt = f"{{BRIGHT_YELLOW}}About to {action} {num_matches} files. {trial_str} Continue?"
+    result = dl.mult_choice_input(prompt,
+                                  legal_answers=["Y", "N"],
+                                  alternate_legal_answers={"YES": "Y", "NO": "N"},
+                                  default="N",
+                                  blank_lines=2)
     if result.upper() not in ["Y", "YES"]:
-        displaylib.display_message("Operation Canceled")
+        dl.print_msg("Operation Canceled")
         sys.exit(EXIT_OK)
 
-    delete_or_rename_files(duplicates,
-                           options,
-                           parser_obj,
-                           query_scandir_obj,
-                           canonical_scandir_obj,
-                           dupe_count)
+    delete_or_rename_files(duplicates=duplicates,
+                           options=options,
+                           do_rename=parser_obj.args.rename,
+                           skip_checksum=parser_obj.args.skip_checksum,
+                           trial=parser_obj.args.trial,
+                           quiet_trial=parser_obj.args.quiet_trial)
 
 
 main()
