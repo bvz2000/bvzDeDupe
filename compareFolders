@@ -320,7 +320,7 @@ def compare_files(session_obj,
                                             mtime=args.match_on_mtime,
                                             skip_checksum=args.skip_checksum):
 
-            dupes_str = f"{{BRIGHT_RED}}D:{{COLOR_NONE}} {len(session_obj.actual_matches.keys())}"
+            dupes_str = f"{{BRIGHT_RED}}D:{{COLOR_NONE}} {len(session_obj.duplicates.keys())}"
             unique_str = f"{{BRIGHT_RED}}U:{{COLOR_NONE}} {len(session_obj.unique)}"
             error_str = f"{{BRIGHT_RED}}E:{{COLOR_NONE}} {len(session_obj.source_error_files)}"
             postpend_str = dl.format_string(f"  {dupes_str} {unique_str} {error_str}")
@@ -526,7 +526,7 @@ def main():
     dl.print_msg("=" * 80)
 
     num_files_checked = f"{{BRIGHT_RED}}{len(session_obj.query_scan.files)}"
-    num_duplicates = f"{{BRIGHT_RED}}{len(session_obj.actual_matches)}"
+    num_duplicates = f"{{BRIGHT_RED}}{len(session_obj.duplicates)}"
     num_unique = f"{{BRIGHT_RED}}{len(session_obj.unique)}"
     num_reused_checksum = f"{{BRIGHT_RED}}{session_obj.pre_computed_checksum_count}"
     num_self = f"{{BRIGHT_RED}}{len(session_obj.skipped_self)}"
@@ -552,9 +552,9 @@ def main():
                 if os.path.isdir(item):
                     f.write(f"querydir{i}={item}\n")
             f.write(f"canonicaldir={os.path.abspath(args.canonical_dir)}\n")
-            f.write(f"num_matches={len(session_obj.actual_matches.items())}\n")
+            f.write(f"num_matches={len(session_obj.duplicates.items())}\n")
             f.write(f"num_unique={len(session_obj.unique)}\n")
-            for file_path, matches in session_obj.actual_matches.items():
+            for file_path, matches in session_obj.duplicates.items():
                 output = list()
                 output.append("D")
                 output.append(file_path)
@@ -594,11 +594,11 @@ def main():
         dl.print_msg("=" * 80)
 
         if args.print_delete:
-            for file_path, matches in session_obj.actual_matches.items():
+            for file_path, matches in session_obj.duplicates.items():
                 file_path = file_path.replace(' ', '\ ')
                 dl.print_msg(f"rm {file_path}")
         else:
-            for file_path, matches in session_obj.actual_matches.items():
+            for file_path, matches in session_obj.duplicates.items():
                 dl.print_msg(file_path)
                 for match in matches:
                     match = match.replace(" ", "\ ")
